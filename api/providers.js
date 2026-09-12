@@ -2,6 +2,7 @@
 
 const { getCatalog } = require("../lib/catalog");
 const { getWatchProviders } = require("../lib/tmdb-providers");
+const { getOfficialProviders } = require("../lib/official-providers");
 
 function findItem(catalog, id) {
     const wanted = String(id || "").trim();
@@ -49,7 +50,8 @@ module.exports = async function handler(req, res) {
                 type: item.type
             },
             providers,
-            attribution: "بيانات مزوّدي المشاهدة من TMDB/JustWatch."
+            officialDirectory: getOfficialProviders(),
+            attribution: "بيانات مزوّدي المشاهدة من TMDB/JustWatch. توفر الخدمات يختلف حسب البلد والعمل."
         });
     } catch (error) {
         console.error("[PROVIDERS API]", error.message);
