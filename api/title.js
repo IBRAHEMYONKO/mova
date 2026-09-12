@@ -91,10 +91,12 @@ module.exports = async function handler(req, res) {
             try { providers = await getWatchProviders(item.tmdbId, item.type, region); } catch { providers = []; }
         }
 
+        const storedChapters = Array.isArray(stored.chapters) ? stored.chapters : [];
+        const itemChapters = Array.isArray(item.chapters) ? item.chapters : [];
         let normalized = normalizeWatchItem({
             ...item,
             seasons,
-            chapters: stored.chapters || item.chapters || []
+            chapters: storedChapters.length > 0 ? storedChapters : itemChapters
         });
         normalized = attachItemSources(normalized, stored);
 
@@ -103,6 +105,7 @@ module.exports = async function handler(req, res) {
         const providerEpisodeLinks = getProviderEpisodeLinks(normalized.seasons);
         const officialLinks = getOfficialLinks(item);
         const availability = getWatchAvailability(normalized);
+        const chapterTotal = Number(item.chapterTotal ?? (Array.isArray(item.chapters) ? item.chapters.length : item.chapters) ?? 0);
 
         return res.status(200).json({
             success: true,
@@ -123,8 +126,8 @@ module.exports = async function handler(req, res) {
                 episodeCount,
                 playableEpisodeCount,
                 providerEpisodeCount: providerEpisodeLinks.length,
-                chapterCount: Number(normalized.chapters?.length || 0),
-                chapterTotal: Number(item.chapters || 0),
+                chapterCount: normalized.chapters.length,
+                chapterTotal,
                 volumeCount: Number(item.volumes || 0),
                 ...availability
             }
