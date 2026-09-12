@@ -9,6 +9,15 @@ module.exports = (req, res) => {
         const file = path.join(process.cwd(), "index.html");
         const html = fs.readFileSync(file, "utf8");
         let output = injectNavigationScript(html);
+
+        const sourceGuard = '<script src="client-source-guard.js"></script>';
+        if (!output.includes(sourceGuard)) {
+            const indexScript = '<script src="index.js"></script>';
+            output = output.includes(indexScript)
+                ? output.replace(indexScript, `${sourceGuard}\n    ${indexScript}`)
+                : `${output}\n${sourceGuard}\n`;
+        }
+
         const script = '<script src="cinema-unified-search.js"></script>';
         if (!output.includes(script)) {
             const marker = /<\/body\s*>/i;
