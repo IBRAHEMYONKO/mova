@@ -21,10 +21,12 @@ function findItem(catalog, id) {
 
 function parseAniListId(id) {
     const value = String(id || "").trim();
-    const typed = value.match(/^anilist-(anime|manga|manhwa|novel)-(\d+)$/i);
+    const typed = value.match(/^anilist[-:]((?:anime|manga|manhwa|novel))[-:](\d+)$/i);
     if (typed) return { id: Number(typed[2]), type: typed[1].toLowerCase() };
-    const legacy = value.match(/^anilist-(\d+)$/i);
+
+    const legacy = value.match(/^anilist[-:](\d+)$/i);
     if (legacy) return { id: Number(legacy[1]), type: "anime" };
+
     return null;
 }
 
