@@ -15,10 +15,10 @@ test("community UI is injected once into the watch page", () => {
 test("community UI contains login, comment, reply, reaction and report flows", () => {
     const source = fs.readFileSync(path.join(__dirname, "..", "community-ui.js"), "utf8");
     assert.match(source, /community-form/);
-    assert.match(source, /data-action=\\"reply\\"/);
-    assert.match(source, /data-action=\\"like\\"/);
-    assert.match(source, /data-action=\\"dislike\\"/);
-    assert.match(source, /data-action=\\"report\\"/);
+    assert.match(source, /data-action="reply"/);
+    assert.match(source, /data-action="like"/);
+    assert.match(source, /data-action="dislike"/);
+    assert.match(source, /data-action="report"/);
     assert.match(source, /from\("comments"\)/);
     assert.match(source, /from\("comment_reactions"\)/);
     assert.match(source, /from\("reports"\)/);
