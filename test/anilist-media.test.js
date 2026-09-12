@@ -58,7 +58,7 @@ test("normalizes Korean manga as manhwa and preserves chapter total separately",
         streamingEpisodes: []
     });
 
-    assert.equal(item.id, "anilist-manga-303");
+    assert.equal(item.id, "anilist-manhwa-303");
     assert.equal(item.type, "manhwa");
     assert.deepEqual(item.chapters, []);
     assert.equal(item.chapterTotal, 150);

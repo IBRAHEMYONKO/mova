@@ -9,8 +9,11 @@ const source = fs.readFileSync("home-recovery.js", "utf8");
 test("homepage recovery has independent fallbacks", () => {
     assert.match(source, /\/api\/movies\?sort=popular/);
     assert.match(source, /api\.tvmaze\.com\/shows/);
-    assert.match(source, /api\.jikan\.moe\/v4\/top\/anime/);
     assert.match(source, /graphql\.anilist\.co/);
-    assert.match(source, /\/api\/catalog-media\?page=1/);
+    assert.match(source, /\/api\/catalog-media\?page=1&perPage=50/);
+    assert.match(source, /anilist-anime-/);
+    assert.match(source, /recoveryMangaGrid/);
+    assert.match(source, /recoveryManhwaGrid/);
+    assert.match(source, /recoveryNovelGrid/);
     assert.match(source, /Promise\.allSettled/);
 });
