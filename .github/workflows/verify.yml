@@ -1,0 +1,27 @@
+name: Verify Cinema
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: node --check api/title.js
+      - run: node --check api/catalog-media.js
+      - run: node --check lib/anilist-media.js
+      - run: node --check lib/watch-model.js
+      - run: node --check lib/episode-model.js
+      - run: node --check lib/watch-availability.js
+      - run: node --check lib/home-page.js
+      - run: node --check media-sections.js
+      - run: node --check favorite-sync.js
+      - run: node --check index.js
+      - run: node --test
