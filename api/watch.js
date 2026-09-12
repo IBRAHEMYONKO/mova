@@ -5,6 +5,7 @@ const path = require("node:path");
 
 const { getCatalog } = require("../lib/catalog");
 const { getSeriesEpisodes } = require("../lib/tmdb-watch");
+const { getWatchProviders } = require("../lib/tmdb-providers");
 const { normalizeWatchItem } = require("../lib/watch-model");
 const {
     attachSourcesToSeasons,
@@ -30,9 +31,7 @@ function loadWatchSources() {
 function findCatalogItem(catalog, id) {
     const wanted = String(id || "").trim();
 
-    if (!wanted) {
-        return null;
-    }
+    if (!wanted) return null;
 
     return catalog.all.find(item =>
         String(item.id) === wanted ||
@@ -57,6 +56,7 @@ module.exports = async function handler(req, res) {
         );
 
         const id = (url.searchParams.get("id") || "").trim();
+        const region = (url.searchParams.get("region") || "IQ").toUpperCase();
 
         if (!id) {
             return res.status(400).json({
@@ -107,9 +107,25 @@ module.exports = async function handler(req, res) {
             storedItem
         );
 
+        let providers = [];
+
+        if (item.tmdbId) {
+            try {
+                providers = await getWatchProviders(
+                    item.tmdbId,
+                    item.type,
+                    region
+                );
+            } catch {
+                providers = [];
+            }
+        }
+
         return res.status(200).json({
             success: true,
             item: withSources,
+            providers,
+            providerAttribution: "بيانات مزوّدي المشاهدة من TMDB/JustWatch.",
             watch: {
                 available: withSources.sources.length > 0 ||
                     withSources.seasons.some(season =>
