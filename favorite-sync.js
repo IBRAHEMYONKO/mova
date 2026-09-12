@@ -1,7 +1,7 @@
 "use strict";
 
 (function syncFavoriteChanges() {
-    const button = document.getElementById("favorite");
+    const button = document.getElementById("favorite") || document.getElementById("favoriteButton");
     if (!button) return;
 
     button.addEventListener("click", () => {
