@@ -7,6 +7,10 @@
     {
       "source": "/watch.html",
       "destination": "/api/watch-page"
+    },
+    {
+      "source": "/my-list.html",
+      "destination": "/api/my-list-page"
     }
   ]
 }
