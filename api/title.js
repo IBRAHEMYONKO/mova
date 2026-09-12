@@ -12,7 +12,6 @@ const { getAniListMediaById } = require("../lib/anilist-media");
 function findItem(catalog, id) {
     const wanted = String(id || "").trim();
     if (!wanted) return null;
-
     return catalog.all.find(item =>
         String(item.id) === wanted ||
         String(item.tmdbId || "") === wanted ||
@@ -25,22 +24,39 @@ function parseAniListId(id) {
     return match ? Number(match[1]) : 0;
 }
 
-function mergeProviderLinks(item) {
-    const links = Array.isArray(item?.externalLinks) ? item.externalLinks : [];
-    const sources = links.map(link => ({
-        id: `external-${link.id || link.name}`,
-        name: link.name || "الموقع الرسمي",
-        kind: "provider",
-        url: link.url,
-        embed: false,
-        official: true,
-        language: link.language || "",
-        subtitle: "",
-        quality: "",
-        priority: 50
-    }));
+function getOfficialLinks(item) {
+    return Array.isArray(item?.externalLinks)
+        ? item.externalLinks
+            .filter(link => link?.url && link?.isDisabled !== true)
+            .map(link => ({
+                id: `external-${link.id || link.name}`,
+                name: link.name || "الموقع الرسمي",
+                url: link.url,
+                language: link.language || "",
+                official: true
+            }))
+        : [];
+}
 
-    return sources;
+function getProviderEpisodeLinks(seasons) {
+    const links = [];
+    for (const season of Array.isArray(seasons) ? seasons : []) {
+        for (const episode of Array.isArray(season?.episodes) ? season.episodes : []) {
+            for (const source of Array.isArray(episode?.sources) ? episode.sources : []) {
+                if (source?.kind === "provider" && source.url) {
+                    links.push({
+                        id: source.id || source.url,
+                        name: source.name || "مشاهدة رسمية",
+                        url: source.url,
+                        episodeNumber: episode.number,
+                        episodeTitle: episode.title,
+                        official: source.official === true
+                    });
+                }
+            }
+        }
+    }
+    return links;
 }
 
 module.exports = async function handler(req, res) {
@@ -52,9 +68,7 @@ module.exports = async function handler(req, res) {
         const id = (url.searchParams.get("id") || "").trim();
         const region = (url.searchParams.get("region") || "IQ").toUpperCase();
 
-        if (!id) {
-            return res.status(400).json({ success: false, error: "معرّف المحتوى مطلوب." });
-        }
+        if (!id) return res.status(400).json({ success: false, error: "معرّف المحتوى مطلوب." });
 
         const catalog = await getCatalog(false);
         let item = findItem(catalog, id);
@@ -66,9 +80,7 @@ module.exports = async function handler(req, res) {
             }
         }
 
-        if (!item) {
-            return res.status(404).json({ success: false, error: "المحتوى غير موجود." });
-        }
+        if (!item) return res.status(404).json({ success: false, error: "المحتوى غير موجود." });
 
         const stored = loadStoredWatchItem(item.id) || {};
         let seasons = Array.isArray(item.seasons) ? item.seasons : [];
@@ -92,33 +104,21 @@ module.exports = async function handler(req, res) {
             }
         }
 
-        const anilistProviderSources = mergeProviderLinks(item);
-        const storedItem = {
-            ...stored,
-            sources: [
-                ...(Array.isArray(stored.sources) ? stored.sources : []),
-                ...anilistProviderSources
-            ]
-        };
-
         let normalized = normalizeWatchItem({
             ...item,
             seasons,
             chapters: stored.chapters || item.chapters || []
         });
 
-        normalized = attachItemSources(normalized, storedItem);
+        normalized = attachItemSources(normalized, stored);
 
-        const episodeCount = normalized.seasons.reduce(
-            (total, season) => total + season.episodes.length,
-            0
-        );
-
+        const episodeCount = normalized.seasons.reduce((total, season) => total + season.episodes.length, 0);
         const playableEpisodeCount = normalized.seasons.reduce(
             (total, season) => total + season.episodes.filter(episode => episode.playable).length,
             0
         );
-
+        const providerEpisodeLinks = getProviderEpisodeLinks(normalized.seasons);
+        const officialLinks = getOfficialLinks(item);
         const availability = getWatchAvailability(normalized);
 
         return res.status(200).json({
@@ -131,12 +131,15 @@ module.exports = async function handler(req, res) {
                 chapters: normalized.chapters
             },
             providers,
+            officialLinks,
+            providerEpisodeLinks,
             meta: {
                 mediaType: normalized.type,
                 format: normalized.format || "",
                 seasonCount: normalized.seasons.length,
                 episodeCount,
                 playableEpisodeCount,
+                providerEpisodeCount: providerEpisodeLinks.length,
                 chapterCount: Number(normalized.chapters?.length || 0),
                 chapterTotal: Number(item.chapters || 0),
                 volumeCount: Number(item.volumes || 0),
@@ -145,9 +148,6 @@ module.exports = async function handler(req, res) {
         });
     } catch (error) {
         console.error("[TITLE API]", error.message);
-        return res.status(500).json({
-            success: false,
-            error: "تعذر تجهيز صفحة المحتوى حاليًا."
-        });
+        return res.status(500).json({ success: false, error: "تعذر تجهيز صفحة المحتوى حاليًا." });
     }
 };
