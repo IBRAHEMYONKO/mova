@@ -1,7 +1,8 @@
 {
     "port": 3000,
 
-    "tmdbAccessToken": "ضع_توكن_TMDb_هنا",
+    "tmdbAccessToken": "ضع_TMDb_API_Read_Access_Token_هنا",
+
     "tmdbApiKey": "",
 
     "omdbApiKey": "f15f4a98",
