@@ -1,7 +1,7 @@
 "use strict";
 
 (function attachIndexAccount() {
-    const state = { client: null, user: null, ready: false };
+    const state = { client: null, user: null, ready: false, discordReady: false };
     const TOPBAR_ID = "topbar";
     const CONTROL_ID = "discord-index-account";
     const LOGIN_ID = "discord-index-login";
@@ -10,7 +10,14 @@
 
     function displayName(user) {
         const metadata = user?.user_metadata || {};
-        return escapeText(metadata.full_name || metadata.name || metadata.user_name || metadata.preferred_username || "عضو الإمبراطورية");
+        return escapeText(
+            metadata.full_name ||
+            metadata.global_name ||
+            metadata.name ||
+            metadata.user_name ||
+            metadata.preferred_username ||
+            "عضو الإمبراطورية"
+        );
     }
 
     function avatarUrl(user) {
@@ -123,11 +130,27 @@
         });
     }
 
+    async function checkDiscordProvider() {
+        try {
+            const response = await fetch("/api/supabase-status", { cache: "no-store" });
+            if (!response.ok) return false;
+            const status = await response.json();
+            return status?.discord === true;
+        } catch {
+            return false;
+        }
+    }
+
     async function signIn() {
         if (!state.client) {
             mount(null);
             return;
         }
+        if (!state.discordReady) {
+            console.warn("DISCORD LOGIN: Discord OAuth is not enabled in Supabase");
+            return;
+        }
+
         const { error } = await state.client.auth.signInWithOAuth({
             provider: "discord",
             options: { redirectTo: `${window.location.origin}/` }
@@ -161,6 +184,7 @@
             state.client = await loadConfig();
             if (!state.client) return;
 
+            state.discordReady = await checkDiscordProvider();
             const { data, error } = await state.client.auth.getUser();
             if (error && !/Auth session missing/i.test(error.message || "")) throw error;
             state.user = data?.user || null;
