@@ -7,68 +7,35 @@
     <style>
         :root { color-scheme: dark; }
         * { box-sizing: border-box; }
-        body {
-            margin: 0;
-            min-height: 100vh;
-            font-family: Arial, Tahoma, sans-serif;
-            background: radial-gradient(circle at top, #301016 0, #100b0d 42%, #070607 100%);
-            color: #fff;
-            display: grid;
-            place-items: center;
-            padding: 24px;
-        }
-        .card {
-            width: min(620px, 100%);
-            background: rgba(18, 14, 16, .94);
-            border: 1px solid rgba(212, 166, 67, .3);
-            border-radius: 24px;
-            padding: 34px;
-            box-shadow: 0 25px 80px rgba(0,0,0,.55);
-        }
-        h1 { margin: 0 0 10px; color: #e4bd62; }
-        p { color: #c7bdc0; line-height: 1.8; }
-        button {
-            border: 0;
-            border-radius: 12px;
-            padding: 13px 20px;
-            cursor: pointer;
-            font-weight: 700;
-            background: linear-gradient(135deg, #d4a643, #8f6519);
-            color: #120d08;
-        }
-        .logout { background: #2a2023; color: #eee; margin-top: 12px; }
-        [hidden] { display: none !important; }
-        .profile { display: grid; gap: 14px; }
-        .avatar { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 2px solid #d4a643; }
-        .status { min-height: 28px; margin-top: 18px; }
-        .status[data-type="error"] { color: #ff8e8e; }
-        .status[data-type="success"] { color: #a8e6b1; }
-        a { color: #e4bd62; }
+        body { margin:0; min-height:100vh; font-family:Arial,Tahoma,sans-serif; background:radial-gradient(circle at top,#301016 0,#100b0d 42%,#070607 100%); color:#fff; display:grid; place-items:center; padding:24px; }
+        .card { width:min(760px,100%); background:rgba(18,14,16,.94); border:1px solid rgba(212,166,67,.3); border-radius:24px; padding:34px; box-shadow:0 25px 80px rgba(0,0,0,.55); }
+        h1 { margin:0 0 10px; color:#e4bd62; } p { color:#c7bdc0; line-height:1.8; }
+        button { border:0; border-radius:12px; padding:13px 20px; cursor:pointer; font-weight:700; background:linear-gradient(135deg,#d4a643,#8f6519); color:#120d08; }
+        .logout { background:#2a2023; color:#eee; margin-top:12px; }
+        [hidden]{display:none!important}.profile{display:grid;gap:14px}.avatar{width:90px;height:90px;border-radius:50%;object-fit:cover;border:2px solid #d4a643}.status{min-height:28px;margin-top:18px}.status[data-type="error"]{color:#ff8e8e}.status[data-type="success"]{color:#a8e6b1}a{color:#e4bd62}
+        .account-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}.account-stats div{background:#100d0f;border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:14px;text-align:center}.account-stats strong{display:block;font-size:25px;color:#e4bd62}.account-stats span{font-size:12px;color:#999}.account-community{margin-top:25px;border-top:1px solid rgba(255,255,255,.08);padding-top:22px}.account-community-head{display:flex;justify-content:space-between;align-items:center;gap:10px}.account-community-head h3{margin:0;color:#e4bd62}.account-read{background:#171315;color:#ddd;padding:9px 12px;font-size:12px}.account-notifications{display:grid;gap:8px;margin-top:12px}.account-notification{padding:13px;border-radius:12px;background:#100d0f;border:1px solid rgba(255,255,255,.07)}.account-notification.unread{border-color:rgba(212,166,67,.35)}.account-notification strong{display:block}.account-notification small{display:block;color:#777;margin-top:5px}.account-empty{padding:18px;color:#777;background:#100d0f;border-radius:12px}@media(max-width:560px){.card{padding:22px}.account-stats{grid-template-columns:1fr}}
     </style>
 </head>
 <body>
 <main class="card">
     <h1>حسابك في إمبراطورية العراق</h1>
     <p>اربط حساب Discord حتى نحفظ المفضلة والتقدم والتفاعل معك عبر أجهزتك.</p>
-
-    <section id="login-panel">
-        <button id="discord-login" type="button">تسجيل الدخول عبر Discord</button>
-    </section>
-
+    <section id="login-panel"><button id="discord-login" type="button">تسجيل الدخول عبر Discord</button></section>
     <section id="profile-panel" class="profile" hidden>
         <img id="account-avatar" class="avatar" alt="" hidden>
-        <div>
-            <h2 id="account-name">عضو الإمبراطورية</h2>
-            <p id="account-email">حساب Discord</p>
-        </div>
+        <div><h2 id="account-name">عضو الإمبراطورية</h2><p id="account-email">حساب Discord</p></div>
+        <div id="account-stats" class="account-stats"></div>
+        <section class="account-community">
+            <div class="account-community-head"><h3>الإشعارات</h3><button id="notifications-read-all" class="account-read" type="button">تعليم الكل كمقروء</button></div>
+            <div id="account-notifications" class="account-notifications"></div>
+        </section>
         <button id="discord-logout" class="logout" type="button">تسجيل الخروج</button>
     </section>
-
     <div id="account-status" class="status" aria-live="polite"></div>
     <p><a href="/">العودة إلى السينما</a></p>
 </main>
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/account.js"></script>
+<script src="/account-community.js"></script>
 </body>
 </html>
