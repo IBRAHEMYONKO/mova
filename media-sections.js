@@ -16,7 +16,11 @@
         const title = escapeHtml(item.title || item.originalTitle || "بدون عنوان");
         const year = item.year ? escapeHtml(item.year) : "—";
         const chapters = Number(item.chapterTotal ?? (Array.isArray(item.chapters) ? item.chapters.length : item.chapters) ?? 0);
+        const volumes = Number(item.volumes || 0);
         const rating = Number(item.rating || 0);
+        const meta = item.type === "novel"
+            ? `${chapters ? `${chapters} فصل` : "رواية"}${volumes ? ` • ${volumes} مجلد` : ""}`
+            : chapters ? `${chapters} فصل` : "بيانات الفصول";
 
         return `
             <a class="content-card" href="/watch.html?id=${id}" data-id="${escapeHtml(item.id)}">
@@ -26,7 +30,7 @@
                 </div>
                 <div class="card-info">
                     <h3>${title}</h3>
-                    <div class="card-meta"><span>${year}</span><span>${chapters ? `${chapters} فصل` : "بيانات الفصول"}</span>${rating ? `<span>★ ${rating.toFixed(1)}</span>` : ""}</div>
+                    <div class="card-meta"><span>${year}</span><span>${meta}</span>${rating ? `<span>★ ${rating.toFixed(1)}</span>` : ""}</div>
                 </div>
             </a>`;
     }
@@ -57,25 +61,13 @@
 
     async function init() {
         try {
-            const response = await fetch("/api/catalog-media?page=1", { cache: "no-store" });
+            const response = await fetch("/api/catalog-media?page=1&perPage=50", { cache: "no-store" });
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             const data = await response.json();
 
-            section(
-                "manga",
-                "مكتبة المانغا",
-                "IRAQ EMPIRE MANGA",
-                Array.isArray(data.manga) ? data.manga : [],
-                "أعمال مانغا حقيقية مع بيانات الفصول والتفاصيل المتوفرة."
-            );
-
-            section(
-                "manhwa",
-                "مكتبة المانهوا",
-                "IRAQ EMPIRE MANHWA",
-                Array.isArray(data.manhwa) ? data.manhwa : [],
-                "أعمال مانهوا حقيقية مع بيانات المصدر والتفاصيل المتاحة."
-            );
+            section("manga", "مكتبة المانغا", "IRAQ EMPIRE MANGA", Array.isArray(data.manga) ? data.manga : [], "مكتبة موسعة من أعمال المانغا الحقيقية مع بيانات الفصول والتفاصيل المتوفرة.");
+            section("manhwa", "مكتبة المانهوا", "IRAQ EMPIRE MANHWA", Array.isArray(data.manhwa) ? data.manhwa : [], "مكتبة موسعة من أعمال المانهوا الحقيقية مع بيانات الفصول والتفاصيل المتاحة.");
+            section("novels", "مكتبة الروايات", "IRAQ EMPIRE NOVELS", Array.isArray(data.novels) ? data.novels : [], "روايات وLight Novels مصنفة من بيانات AniList الحقيقية.");
         } catch (error) {
             console.warn("MEDIA SECTIONS ERROR:", error.message);
         }
