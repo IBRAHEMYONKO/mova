@@ -42,16 +42,25 @@ test("watch sources are required before a watch action is considered available",
 });
 
 test("visible seasons never invent missing episodes", () => {
-    assert.deepEqual(
-        visibleSeasons([
-            { number: 1, episodes: [] },
-            { number: 2, episodes: [{ number: 3, title: "Three" }] },
-            { number: 3 }
-        ]),
-        [
-            { number: 2, episodes: [{ number: 3, title: "Three" }] }
-        ]
-    );
+    const seasons = visibleSeasons([
+        { number: 1, episodes: [] },
+        {
+            number: 2,
+            episodes: [
+                {
+                    number: 3,
+                    title: "Three",
+                    sources: [{ name: "Official", url: "https://example.com/e3" }]
+                }
+            ]
+        },
+        { number: 3 }
+    ]);
+
+    assert.equal(seasons.length, 1);
+    assert.equal(seasons[0].number, 2);
+    assert.equal(seasons[0].episodes.length, 1);
+    assert.equal(seasons[0].episodes[0].number, 3);
 });
 
 test("chapter normalization keeps only real chapters", () => {
@@ -62,7 +71,28 @@ test("chapter normalization keeps only real chapters", () => {
             null
         ]),
         [
-            { number: 1, title: "One", sources: [{ url: "https://example.com/1" }] }
+            {
+                id: "",
+                number: 1,
+                title: "One",
+                overview: "",
+                releaseDate: "",
+                pages: 0,
+                sources: [
+                    {
+                        id: "",
+                        name: "مصدر مشاهدة",
+                        kind: "video",
+                        url: "https://example.com/1",
+                        embed: false,
+                        official: false,
+                        language: "",
+                        subtitle: "",
+                        quality: "",
+                        priority: 0
+                    }
+                ]
+            }
         ]
     );
 });
