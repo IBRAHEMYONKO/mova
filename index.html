@@ -1,15 +1,163 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#090909">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#070707">
+    <meta name="description" content="IRAQ EMPIRE CINEMA — عراق إمباير سينما، مكتبة الأفلام والمسلسلات والأنمي">
+    <meta name="color-scheme" content="dark">
     <title>IRAQ EMPIRE CINEMA | عراق إمباير سينما</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Existing page markup is preserved by the repository version. -->
 
+    <div class="noise"></div>
+    <div class="page-glow glow-a"></div>
+    <div class="page-glow glow-b"></div>
+
+    <header class="topbar" id="topbar">
+        <a class="brand" href="#home" aria-label="عراق إمباير سينما">
+            <span class="brand-mark">IE</span>
+            <span class="brand-text">
+                <b>IRAQ EMPIRE</b>
+                <small>CINEMA</small>
+                <em>عراق إمباير سينما</em>
+            </span>
+        </a>
+        <nav class="nav" id="nav" aria-label="التنقل الرئيسي">
+            <a class="nav-link active" href="#home">الرئيسية</a>
+            <a class="nav-link" href="#movies">الأفلام</a>
+            <a class="nav-link" href="#series">المسلسلات</a>
+            <a class="nav-link" href="#anime">الأنمي</a>
+            <a class="nav-link" href="#popular">الأكثر شعبية</a>
+            <a class="nav-link" href="#categories">التصنيفات</a>
+        </nav>
+        <button class="icon-btn" id="openSearch" type="button" aria-label="البحث">⌕</button>
+    </header>
+
+    <main>
+        <section class="hero" id="home">
+            <div class="hero-copy">
+                <div class="eyebrow"><span></span>IRAQ EMPIRE CINEMA</div>
+                <h1>السينما<br><em>بطريقة إمبراطورية.</em></h1>
+                <p>اكتشف أحدث الأفلام والمسلسلات والأنمي، الأعلى تقييماً والأكثر شعبية في مكتبة سينمائية تتحدث تلقائياً.</p>
+                <div class="hero-actions">
+                    <a class="btn btn-primary" href="#movies">استكشف المكتبة <span>←</span></a>
+                    <button class="btn btn-ghost" id="heroSearch" type="button">ابحث الآن</button>
+                </div>
+                <div class="hero-stats">
+                    <div><b id="movieCount">—</b><span>فيلم</span></div>
+                    <div><b id="seriesCount">—</b><span>مسلسل</span></div>
+                    <div><b id="animeCount">—</b><span>أنمي</span></div>
+                    <div><b>24/7</b><span>تحديث</span></div>
+                </div>
+            </div>
+            <div class="hero-art" id="heroArt">
+                <div class="hero-art-inner"></div>
+                <div class="hero-badge">IRAQ<br><strong>EMPIRE</strong><small>CINEMA</small></div>
+            </div>
+        </section>
+
+        <section class="quick-types" aria-label="أنواع المحتوى">
+            <a class="type-card type-movie" href="#movies"><span class="type-icon">🎬</span><span><small>IRAQ EMPIRE</small><strong>الأفلام</strong></span><b>←</b></a>
+            <a class="type-card type-series" href="#series"><span class="type-icon">📺</span><span><small>IRAQ EMPIRE</small><strong>المسلسلات</strong></span><b>←</b></a>
+            <a class="type-card type-anime" href="#anime"><span class="type-icon">✦</span><span><small>IRAQ EMPIRE</small><strong>الأنمي</strong></span><b>←</b></a>
+        </section>
+
+        <section class="section" id="popular">
+            <div class="section-head">
+                <div><span class="kicker">TRENDING NOW</span><h2>الأكثر شعبية</h2><p class="section-description">المحتوى الأكثر مشاهدة وتفاعلاً في المكتبة.</p></div>
+                <a href="#movies" class="text-link">المكتبة كاملة ←</a>
+            </div>
+            <div class="movie-row" id="popularGrid"><div class="loading-row"></div></div>
+        </section>
+
+        <section class="section dark-section" id="movies" data-content-type="movie">
+            <div class="section-head">
+                <div><span class="kicker">IRAQ EMPIRE MOVIES</span><h2>مكتبة الأفلام</h2><p class="section-description">أحدث الأفلام والأعمال السينمائية المتوفرة.</p></div>
+                <div class="sort-wrap"><label for="movieSortSelect">ترتيب</label><select id="movieSortSelect"><option value="popular">الأكثر شعبية</option><option value="rating">الأعلى تقييماً</option><option value="new">الأحدث</option></select></div>
+            </div>
+            <div class="filters" id="movieFilters">
+                <button class="filter active" data-category="all" type="button">الكل</button>
+                <button class="filter" data-category="أكشن" type="button">أكشن</button>
+                <button class="filter" data-category="دراما" type="button">دراما</button>
+                <button class="filter" data-category="رعب" type="button">رعب</button>
+                <button class="filter" data-category="كوميديا" type="button">كوميديا</button>
+                <button class="filter" data-category="خيال" type="button">خيال</button>
+                <button class="filter" data-category="خيال علمي" type="button">خيال علمي</button>
+                <button class="filter" data-category="إثارة" type="button">إثارة</button>
+            </div>
+            <div class="movie-grid" id="movieGrid" data-type="movie"></div>
+            <div class="empty" id="emptyState" hidden><div>⌁</div><h3>لم نجد أفلاماً</h3><p>جرّب تصنيفاً أو كلمة بحث مختلفة.</p></div>
+            <button class="load-more" id="loadMore" type="button">عرض المزيد</button>
+        </section>
+
+        <section class="section series-section" id="series" data-content-type="series">
+            <div class="section-head">
+                <div><span class="kicker">IRAQ EMPIRE SERIES</span><h2>مكتبة المسلسلات</h2><p class="section-description">مسلسلات مختارة من مصادر البيانات المتاحة.</p></div>
+                <a href="#series" class="text-link" data-refresh-type="series">عرض الكل ←</a>
+            </div>
+            <div class="content-tabs" id="seriesFilters"><button class="content-tab active" data-series-filter="all" type="button">الكل</button><button class="content-tab" data-series-filter="popular" type="button">الأكثر شعبية</button><button class="content-tab" data-series-filter="rating" type="button">الأعلى تقييماً</button></div>
+            <div class="movie-grid" id="seriesGrid" data-type="series"></div>
+            <div class="empty" id="seriesEmptyState" hidden><div>◈</div><h3>لا توجد مسلسلات حالياً</h3><p>سيتم عرض المسلسلات تلقائياً عند توفرها من المصدر.</p></div>
+        </section>
+
+        <section class="section dark-section anime-section" id="anime" data-content-type="anime">
+            <div class="section-head">
+                <div><span class="kicker">IRAQ EMPIRE ANIME</span><h2>عالم الأنمي</h2><p class="section-description">أعمال الأنمي المحدثة تلقائياً من مصادر البيانات.</p></div>
+                <a href="#anime" class="text-link" data-refresh-type="anime">عرض الكل ←</a>
+            </div>
+            <div class="content-tabs" id="animeFilters"><button class="content-tab active" data-anime-filter="all" type="button">الكل</button><button class="content-tab" data-anime-filter="airing" type="button">يعرض الآن</button><button class="content-tab" data-anime-filter="rating" type="button">الأعلى تقييماً</button></div>
+            <div class="movie-grid" id="animeGrid" data-type="anime"></div>
+            <div class="empty" id="animeEmptyState" hidden><div>✦</div><h3>لا يوجد أنمي حالياً</h3><p>سيتم تحديث مكتبة الأنمي تلقائياً.</p></div>
+        </section>
+
+        <section class="section categories-section" id="categories">
+            <div class="section-head"><div><span class="kicker">EXPLORE</span><h2>اختر مزاجك</h2><p class="section-description">اختر نوع المحتوى الذي تريد استكشافه.</p></div></div>
+            <div class="category-grid">
+                <button class="category-card c1" data-category="أكشن" type="button"><b>01</b><strong>أكشن</strong><span>ACTION</span></button>
+                <button class="category-card c2" data-category="دراما" type="button"><b>02</b><strong>دراما</strong><span>DRAMA</span></button>
+                <button class="category-card c3" data-category="رعب" type="button"><b>03</b><strong>رعب</strong><span>HORROR</span></button>
+                <button class="category-card c4" data-category="كوميديا" type="button"><b>04</b><strong>كوميديا</strong><span>COMEDY</span></button>
+                <button class="category-card c5" data-category="خيال علمي" type="button"><b>05</b><strong>خيال علمي</strong><span>SCI-FI</span></button>
+                <button class="category-card c6" data-category="إثارة" type="button"><b>06</b><strong>إثارة</strong><span>THRILLER</span></button>
+            </div>
+        </section>
+
+        <section class="library-status" id="libraryStatus">
+            <div><span class="status-dot"></span><span>IRAQ EMPIRE CINEMA</span></div>
+            <p id="statusText">جاري الاتصال بمكتبة المحتوى...</p>
+            <small id="lastUpdate">—</small>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-brand"><b>IRAQ EMPIRE</b><span>CINEMA</span><small>عراق إمباير سينما</small></div>
+        <p>مكتبة سينمائية تجمع الأفلام والمسلسلات والأنمي وتُحدّث تلقائياً.</p>
+        <small>بيانات الأفلام والمسلسلات والأنمي والصور مقدمة عبر مصادر بيانات خارجية.<br>IRAQ EMPIRE CINEMA غير تابع لـ TMDB.</small>
+    </footer>
+
+    <div class="search-overlay" id="searchOverlay" hidden>
+        <div class="search-panel">
+            <button class="close-btn" id="closeSearch" type="button" aria-label="إغلاق البحث">×</button>
+            <span class="kicker">IRAQ EMPIRE SEARCH</span><h2>ابحث في المكتبة</h2><p class="search-description">ابحث عن فيلم أو مسلسل أو أنمي.</p>
+            <input id="searchInput" type="search" placeholder="اكتب اسم الفيلم أو المسلسل أو الأنمي..." autocomplete="off">
+            <div class="search-types" id="searchTypes"><button class="search-type active" data-search-type="all" type="button">الكل</button><button class="search-type" data-search-type="movie" type="button">أفلام</button><button class="search-type" data-search-type="series" type="button">مسلسلات</button><button class="search-type" data-search-type="anime" type="button">أنمي</button></div>
+            <div id="searchResults" class="search-results"></div>
+        </div>
+    </div>
+
+    <div class="movie-modal" id="movieModal" hidden>
+        <div class="modal-card">
+            <button class="close-btn" id="closeModal" type="button" aria-label="إغلاق">×</button>
+            <div class="modal-backdrop" id="modalBackdrop"></div>
+            <div class="modal-body"><div class="modal-poster" id="modalPoster"></div><div class="modal-details"><span class="kicker" id="modalType"></span><span class="kicker" id="modalGenres"></span><h2 id="modalTitle"></h2><div class="meta" id="modalMeta"></div><p id="modalOverview"></p><div class="modal-extra" id="modalExtra"></div><div class="modal-actions"><button class="btn btn-primary" id="modalWatch" type="button">المشاهدة</button><button class="btn btn-ghost" id="modalCloseAlt" type="button">إغلاق</button></div></div></div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <!-- Directly loaded so the site also works when Vercel serves index.html without /api/home rewrite. -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="index.js"></script>
     <script src="watch-navigation.js"></script>
