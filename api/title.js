@@ -20,21 +20,23 @@ function findItem(catalog, id) {
 }
 
 function parseAniListId(id) {
-    const match = String(id || "").match(/^anilist-(?:anime|manga)-(\d+)$/i);
-    return match ? Number(match[1]) : 0;
+    const value = String(id || "").trim();
+    const typed = value.match(/^anilist-(anime|manga)-(\d+)$/i);
+    if (typed) return { id: Number(typed[2]), type: typed[1].toLowerCase() };
+    const legacy = value.match(/^anilist-(\d+)$/i);
+    if (legacy) return { id: Number(legacy[1]), type: "anime" };
+    return null;
 }
 
 function getOfficialLinks(item) {
     return Array.isArray(item?.externalLinks)
-        ? item.externalLinks
-            .filter(link => link?.url && link?.isDisabled !== true)
-            .map(link => ({
-                id: `external-${link.id || link.name}`,
-                name: link.name || "الموقع الرسمي",
-                url: link.url,
-                language: link.language || "",
-                official: true
-            }))
+        ? item.externalLinks.filter(link => link?.url && link?.isDisabled !== true).map(link => ({
+            id: `external-${link.id || link.name}`,
+            name: link.name || "الموقع الرسمي",
+            url: link.url,
+            language: link.language || "",
+            official: true
+        }))
         : [];
 }
 
@@ -67,41 +69,26 @@ module.exports = async function handler(req, res) {
         const url = new URL(req.url, `https://${req.headers.host || "localhost"}`);
         const id = (url.searchParams.get("id") || "").trim();
         const region = (url.searchParams.get("region") || "IQ").toUpperCase();
-
         if (!id) return res.status(400).json({ success: false, error: "معرّف المحتوى مطلوب." });
 
         const catalog = await getCatalog(false);
         let item = findItem(catalog, id);
-
         if (!item) {
-            const anilistId = parseAniListId(id);
-            if (anilistId) {
-                item = await getAniListMediaById(anilistId, id.includes("manga") ? "manga" : "anime");
-            }
+            const parsed = parseAniListId(id);
+            if (parsed) item = await getAniListMediaById(parsed.id, parsed.type);
         }
-
         if (!item) return res.status(404).json({ success: false, error: "المحتوى غير موجود." });
 
         const stored = loadStoredWatchItem(item.id) || {};
         let seasons = Array.isArray(item.seasons) ? item.seasons : [];
-
         if ((item.type === "series" || item.type === "tv") && item.tmdbId) {
-            try {
-                seasons = await getSeriesEpisodes(item.tmdbId);
-            } catch {
-                seasons = [];
-            }
+            try { seasons = await getSeriesEpisodes(item.tmdbId); } catch { seasons = []; }
         }
-
         seasons = attachSourcesToSeasons(seasons, stored.seasons);
 
         let providers = [];
         if (item.tmdbId) {
-            try {
-                providers = await getWatchProviders(item.tmdbId, item.type, region);
-            } catch {
-                providers = [];
-            }
+            try { providers = await getWatchProviders(item.tmdbId, item.type, region); } catch { providers = []; }
         }
 
         let normalized = normalizeWatchItem({
@@ -109,14 +96,10 @@ module.exports = async function handler(req, res) {
             seasons,
             chapters: stored.chapters || item.chapters || []
         });
-
         normalized = attachItemSources(normalized, stored);
 
         const episodeCount = normalized.seasons.reduce((total, season) => total + season.episodes.length, 0);
-        const playableEpisodeCount = normalized.seasons.reduce(
-            (total, season) => total + season.episodes.filter(episode => episode.playable).length,
-            0
-        );
+        const playableEpisodeCount = normalized.seasons.reduce((total, season) => total + season.episodes.filter(episode => episode.playable).length, 0);
         const providerEpisodeLinks = getProviderEpisodeLinks(normalized.seasons);
         const officialLinks = getOfficialLinks(item);
         const availability = getWatchAvailability(normalized);
