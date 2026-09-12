@@ -3,6 +3,10 @@
     {
       "source": "/",
       "destination": "/api/home"
+    },
+    {
+      "source": "/watch.html",
+      "destination": "/api/watch-page"
     }
   ]
 }
