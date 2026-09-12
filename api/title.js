@@ -6,6 +6,7 @@ const { getWatchProviders } = require("../lib/tmdb-providers");
 const { normalizeWatchItem } = require("../lib/watch-model");
 const { loadStoredWatchItem } = require("../lib/watch-storage");
 const { attachSourcesToSeasons, attachItemSources } = require("../lib/watch-response");
+const { getWatchAvailability } = require("../lib/watch-availability");
 
 function findItem(catalog, id) {
     const wanted = String(id || "").trim();
@@ -68,11 +69,13 @@ module.exports = async function handler(req, res) {
             0
         );
 
+        const availability = getWatchAvailability(normalized);
+
         return res.status(200).json({
             success: true,
             item: normalized,
             watch: {
-                available: normalized.sources.length > 0 || episodeCount > 0,
+                available: availability.available,
                 movie: normalized.sources,
                 seasons: normalized.seasons,
                 chapters: normalized.chapters
@@ -82,9 +85,7 @@ module.exports = async function handler(req, res) {
                 seasonCount: normalized.seasons.length,
                 episodeCount,
                 chapterCount: normalized.chapters.length,
-                hasDirectWatchSource: normalized.sources.length > 0,
-                hasEpisodeSources: episodeCount > 0,
-                hasChapterSources: normalized.chapters.length > 0
+                ...availability
             }
         });
     } catch (error) {
