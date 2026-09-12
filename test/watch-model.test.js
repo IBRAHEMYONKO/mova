@@ -1,7 +1,7 @@
 "use strict";
 
-const test = require("node:test");
 const assert = require("node:assert/strict");
+const test = require("node:test");
 
 const {
     normalizeWatchItem,
@@ -91,39 +91,19 @@ test("provider-only episodes remain visible without becoming playable", () => {
     assert.equal(seasons[0].episodes[0].providerCount, 1);
 });
 
-test("chapter normalization keeps only real chapters", () => {
-    assert.deepEqual(
-        normalizeChapterList([
-            { number: 1, title: "One", sources: [{ url: "https://example.com/1" }] },
-            { number: 2, title: "Two", sources: [] },
-            null
-        ]),
-        [
-            {
-                id: "",
-                number: 1,
-                title: "One",
-                overview: "",
-                releaseDate: "",
-                pages: 0,
-                sources: [
-                    {
-                        id: "",
-                        name: "مصدر مشاهدة",
-                        kind: "video",
-                        url: "https://example.com/1",
-                        embed: false,
-                        official: false,
-                        language: "",
-                        subtitle: "",
-                        quality: "",
-                        priority: 0
-                    }
-                ],
-                playable: true,
-                sourceCount: 1,
-                providerCount: 0
-            }
-        ]
-    );
+test("chapter normalization keeps real chapter metadata even without a source", () => {
+    const chapters = normalizeChapterList([
+        { number: 1, title: "One", sources: [{ url: "https://example.com/1" }] },
+        { number: 2, title: "Two", sources: [] },
+        { number: 3, title: "Three", sources: [{ url: "" }] },
+        null
+    ]);
+
+    assert.equal(chapters.length, 3);
+    assert.equal(chapters[0].playable, true);
+    assert.equal(chapters[0].sourceCount, 1);
+    assert.equal(chapters[1].playable, false);
+    assert.equal(chapters[1].sourceCount, 0);
+    assert.equal(chapters[2].playable, false);
+    assert.equal(chapters[2].sourceCount, 0);
 });
