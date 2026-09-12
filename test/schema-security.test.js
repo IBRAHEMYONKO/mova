@@ -17,5 +17,5 @@ test("protects moderator and ban flags from normal profile updates", () => {
 });
 
 test("uses null-safe uniqueness for watch progress dimensions", () => {
-    assert.match(schema, /unique index.*watch_progress.*coalesce/i);
+    assert.match(schema, /unique index[\s\S]*watch_progress_unique_dimensions[\s\S]*coalesce/i);
 });
