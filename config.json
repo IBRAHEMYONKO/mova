@@ -1,0 +1,15 @@
+{
+    "port": 3000,
+
+    "tmdbAccessToken": "ضع_TMDb_API_Read_Access_Token_هنا",
+
+    "tmdbApiKey": "",
+
+    "omdbApiKey": "",
+
+    "omdbSeedTitles": [],
+
+    "cacheHours": 6,
+
+    "syncSecret": "ضع_سر_التحديث_هنا"
+}
