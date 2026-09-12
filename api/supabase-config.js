@@ -7,10 +7,14 @@ module.exports = (req, res) => {
     res.setHeader("Content-Type", "application/json; charset=utf-8");
     res.setHeader("Cache-Control", "no-store");
 
+    // Missing Supabase environment variables are a configuration state, not
+    // an unavailable API route. Returning 200 lets the frontend stop cleanly
+    // without filling the browser console with repeated 503 errors.
     if (!url || !publishableKey) {
-        return res.status(503).json({
-            success: false,
-            configured: false
+        return res.status(200).json({
+            success: true,
+            configured: false,
+            reason: "Supabase is not configured on this deployment."
         });
     }
 
