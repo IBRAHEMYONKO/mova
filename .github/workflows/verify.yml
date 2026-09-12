@@ -20,10 +20,12 @@ jobs:
       - run: node --check lib/watch-model.js
       - run: node --check lib/episode-model.js
       - run: node --check lib/watch-availability.js
+      - run: node --check lib/watch-response.js
       - run: node --check lib/home-page.js
       - run: node --check media-sections.js
       - run: node --check favorite-sync.js
       - run: node --check index.js
+      - run: node --test test/anilist-media.test.js
       - run: node --test test/watch-model.test.js
       - run: node --test test/watch-response.test.js
       - run: node --test test/home-page.test.js
