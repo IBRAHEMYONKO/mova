@@ -1,221 +1,353 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ar" dir="rtl">
+
 <head>
-    <meta charset="UTF-8">
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+
+    <meta charset="utf-8">
 
     <meta
-        name="description"
-        content="NOVA CINEMA - عالم السينما بين يديك"
+        name="viewport"
+        content="width=device-width,initial-scale=1"
     >
 
     <meta
         name="theme-color"
-        content="#b5122d"
+        content="#090a0f"
     >
 
-    <title>NOVA CINEMA</title>
+    <meta
+        name="description"
+        content="IRAQ EMPIRE CINEMA — مكتبة سينمائية تتحدث تلقائياً"
+    >
 
-    <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="style.css">
+    <title>IRAQ EMPIRE CINEMA</title>
+
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
+
 </head>
 
 <body>
 
-    <!-- =========================
-         الشريط العلوي
-    ========================== -->
+    <div class="noise"></div>
 
-    <header class="navbar">
+    <div class="page-glow glow-a"></div>
+    <div class="page-glow glow-b"></div>
 
-        <div class="logo">
-            <span class="logo-nova">NOVA</span>
-            <span class="logo-cinema">CINEMA</span>
-        </div>
 
-        <nav class="nav-links">
+    <header
+        class="topbar"
+        id="topbar"
+    >
 
-            <button
-                class="nav-btn active"
-                data-page="home"
+        <a
+            class="brand"
+            href="#home"
+        >
+
+            <span class="brand-mark">
+                IE
+            </span>
+
+            <span>
+
+                <b>
+                    IRAQ EMPIRE
+                </b>
+
+                <small>
+                    CINEMA
+                </small>
+
+            </span>
+
+        </a>
+
+
+        <nav
+            class="nav"
+            id="nav"
+        >
+
+            <a
+                class="nav-link active"
+                href="#home"
             >
                 الرئيسية
-            </button>
+            </a>
 
-            <button
-                class="nav-btn"
-                data-page="movies"
+            <a
+                class="nav-link"
+                href="#movies"
             >
                 الأفلام
-            </button>
+            </a>
 
-            <button
-                class="nav-btn"
-                data-page="categories"
+            <a
+                class="nav-link"
+                href="#popular"
+            >
+                الأكثر شعبية
+            </a>
+
+            <a
+                class="nav-link"
+                href="#categories"
             >
                 التصنيفات
-            </button>
+            </a>
 
         </nav>
 
+
         <button
-            class="search-button"
+            class="icon-btn"
             id="openSearch"
-            aria-label="بحث"
         >
-            🔍
+            ⌕
         </button>
 
     </header>
 
 
-    <!-- =========================
-         المحتوى الرئيسي
-    ========================== -->
-
     <main>
 
-        <!-- الرئيسية -->
+
+        <!-- HERO -->
 
         <section
-            class="page active"
-            id="page-home"
+            class="hero"
+            id="home"
         >
 
-            <section class="hero">
+            <div class="hero-copy">
 
-                <div class="hero-content">
+                <div class="eyebrow">
 
-                    <span class="hero-label">
-                        NOVA CINEMA ORIGINAL
-                    </span>
+                    <span></span>
 
-                    <h1>
-                        عالم السينما<br>
-                        <span>بين يديك</span>
-                    </h1>
-
-                    <p>
-                        اكتشف مجموعة من الأفلام
-                        واستمتع بتجربة سينمائية
-                        مختلفة داخل NOVA.
-                    </p>
-
-                    <div class="hero-actions">
-
-                        <button
-                            class="primary-button"
-                            data-page="movies"
-                        >
-                            استكشف الأفلام
-                        </button>
-
-                        <button
-                            class="secondary-button"
-                            data-page="categories"
-                        >
-                            التصنيفات
-                        </button>
-
-                    </div>
+                    IRAQ EMPIRE CINEMA
 
                 </div>
 
-            </section>
+
+                <h1>
+
+                    السينما
+
+                    <br>
+
+                    <em>
+                        بطريقة إمبراطورية.
+                    </em>
+
+                </h1>
 
 
-            <!-- الأكثر مشاهدة -->
+                <p>
 
-            <section class="content-section">
+                    اكتشف أحدث الأفلام،
+                    الأعلى تقييماً والأكثر شعبية
+                    في مكتبة تتحدث تلقائياً.
 
-                <div class="section-header">
+                </p>
 
-                    <div>
-                        <span class="section-small">
-                            NOVA PICKS
+
+                <div class="hero-actions">
+
+                    <a
+                        class="btn btn-primary"
+                        href="#movies"
+                    >
+
+                        استكشف المكتبة
+
+                        <span>
+                            ←
                         </span>
 
-                        <h2>
-                            الأكثر مشاهدة
-                        </h2>
-                    </div>
+                    </a>
+
 
                     <button
-                        class="view-all"
-                        data-page="movies"
+                        class="btn btn-ghost"
+                        id="heroSearch"
                     >
-                        عرض الكل
+
+                        ابحث عن فيلم
+
                     </button>
 
                 </div>
 
-                <div
-                    class="movie-grid"
-                    id="popularMovies"
-                ></div>
 
-            </section>
-
-
-            <!-- المضاف حديثاً -->
-
-            <section class="content-section">
-
-                <div class="section-header">
+                <div class="hero-stats">
 
                     <div>
-                        <span class="section-small">
-                            NEW RELEASES
+
+                        <b id="movieCount">
+                            —
+                        </b>
+
+                        <span>
+                            فيلم
                         </span>
 
-                        <h2>
-                            المضاف حديثًا
-                        </h2>
+                    </div>
+
+
+                    <div>
+
+                        <b>
+                            24/7
+                        </b>
+
+                        <span>
+                            تحديث
+                        </span>
+
+                    </div>
+
+
+                    <div>
+
+                        <b id="lastUpdate">
+                            —
+                        </b>
+
+                        <span>
+                            آخر تحديث
+                        </span>
+
                     </div>
 
                 </div>
 
-                <div
-                    class="movie-grid"
-                    id="newMovies"
-                ></div>
+            </div>
 
-            </section>
+
+            <div
+                class="hero-art"
+                id="heroArt"
+            >
+
+                <div class="hero-art-inner"></div>
+
+                <div class="hero-badge">
+
+                    NOVA
+
+                    <br>
+
+                    <strong>
+                        PREMIERE
+                    </strong>
+
+                </div>
+
+            </div>
 
         </section>
 
 
-        <!-- =========================
-             صفحة الأفلام
-        ========================== -->
+        <!-- POPULAR -->
 
         <section
-            class="page"
-            id="page-movies"
+            class="section"
+            id="popular"
         >
 
-            <div class="page-title">
+            <div class="section-head">
 
-                <span>
-                    NOVA LIBRARY
-                </span>
+                <div>
 
-                <h1>
-                    الأفلام
-                </h1>
+                    <span class="kicker">
+                        TRENDING NOW
+                    </span>
 
-                <p>
-                    استكشف مكتبة NOVA CINEMA.
-                </p>
+                    <h2>
+                        الأكثر شعبية
+                    </h2>
+
+                </div>
+
+
+                <a
+                    href="#movies"
+                    class="text-link"
+                >
+                    المكتبة كاملة ←
+                </a>
 
             </div>
 
+
+            <div
+                class="movie-row"
+                id="popularGrid"
+            >
+
+                <div class="loading-row"></div>
+
+            </div>
+
+        </section>
+
+
+        <!-- MOVIES -->
+
+        <section
+            class="section dark-section"
+            id="movies"
+        >
+
+            <div class="section-head">
+
+                <div>
+
+                    <span class="kicker">
+                        IRAQ EMPIRE LIBRARY
+                    </span>
+
+                    <h2>
+                        مكتبة الأفلام
+                    </h2>
+
+                </div>
+
+
+                <div class="sort-wrap">
+
+                    <label for="sortSelect">
+                        ترتيب
+                    </label>
+
+                    <select id="sortSelect">
+
+                        <option value="popular">
+                            الأكثر شعبية
+                        </option>
+
+                        <option value="rating">
+                            الأعلى تقييماً
+                        </option>
+
+                        <option value="new">
+                            الأحدث
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+
             <div
                 class="filters"
-                id="movieFilters"
+                id="filters"
             >
 
                 <button
@@ -227,104 +359,270 @@
 
                 <button
                     class="filter"
-                    data-category="action"
+                    data-category="أكشن"
                 >
                     أكشن
                 </button>
 
                 <button
                     class="filter"
-                    data-category="drama"
+                    data-category="دراما"
                 >
                     دراما
                 </button>
 
                 <button
                     class="filter"
-                    data-category="horror"
+                    data-category="رعب"
                 >
                     رعب
                 </button>
 
                 <button
                     class="filter"
-                    data-category="comedy"
+                    data-category="كوميديا"
                 >
                     كوميديا
                 </button>
 
                 <button
                     class="filter"
-                    data-category="fantasy"
+                    data-category="خيال"
                 >
                     خيال
                 </button>
 
+                <button
+                    class="filter"
+                    data-category="خيال علمي"
+                >
+                    خيال علمي
+                </button>
+
+                <button
+                    class="filter"
+                    data-category="إثارة"
+                >
+                    إثارة
+                </button>
+
             </div>
+
 
             <div
                 class="movie-grid"
-                id="allMovies"
+                id="movieGrid"
             ></div>
 
-        </section>
 
+            <div
+                class="empty"
+                id="emptyState"
+                hidden
+            >
 
-        <!-- =========================
-             صفحة التصنيفات
-        ========================== -->
+                <div>
+                    ⌁
+                </div>
 
-        <section
-            class="page"
-            id="page-categories"
-        >
-
-            <div class="page-title">
-
-                <span>
-                    EXPLORE
-                </span>
-
-                <h1>
-                    التصنيفات
-                </h1>
+                <h3>
+                    لم نجد أفلاماً
+                </h3>
 
                 <p>
-                    اختر النوع الذي يناسب مزاجك.
+                    جرّب تصنيفاً أو كلمة بحث مختلفة.
                 </p>
 
             </div>
 
-            <div
-                class="category-grid"
-                id="categoryGrid"
-            ></div>
+
+            <button
+                class="load-more"
+                id="loadMore"
+            >
+                عرض المزيد
+            </button>
+
+        </section>
+
+
+        <!-- CATEGORIES -->
+
+        <section
+            class="section categories-section"
+            id="categories"
+        >
+
+            <div class="section-head">
+
+                <div>
+
+                    <span class="kicker">
+                        EXPLORE
+                    </span>
+
+                    <h2>
+                        اختر مزاجك
+                    </h2>
+
+                </div>
+
+            </div>
+
+
+            <div class="category-grid">
+
+                <button
+                    class="category-card c1"
+                    data-category="أكشن"
+                >
+
+                    <b>
+                        01
+                    </b>
+
+                    <strong>
+                        أكشن
+                    </strong>
+
+                    <span>
+                        ACTION
+                    </span>
+
+                </button>
+
+
+                <button
+                    class="category-card c2"
+                    data-category="دراما"
+                >
+
+                    <b>
+                        02
+                    </b>
+
+                    <strong>
+                        دراما
+                    </strong>
+
+                    <span>
+                        DRAMA
+                    </span>
+
+                </button>
+
+
+                <button
+                    class="category-card c3"
+                    data-category="رعب"
+                >
+
+                    <b>
+                        03
+                    </b>
+
+                    <strong>
+                        رعب
+                    </strong>
+
+                    <span>
+                        HORROR
+                    </span>
+
+                </button>
+
+
+                <button
+                    class="category-card c4"
+                    data-category="كوميديا"
+                >
+
+                    <b>
+                        04
+                    </b>
+
+                    <strong>
+                        كوميديا
+                    </strong>
+
+                    <span>
+                        COMEDY
+                    </span>
+
+                </button>
+
+
+                <button
+                    class="category-card c5"
+                    data-category="خيال علمي"
+                >
+
+                    <b>
+                        05
+                    </b>
+
+                    <strong>
+                        خيال علمي
+                    </strong>
+
+                    <span>
+                        SCI-FI
+                    </span>
+
+                </button>
+
+            </div>
 
         </section>
 
     </main>
 
 
-    <!-- =========================
-         البحث
-    ========================== -->
+    <footer class="footer">
+
+        <div>
+
+            <b>
+                IRAQ EMPIRE
+            </b>
+
+            <span>
+                CINEMA
+            </span>
+
+        </div>
+
+        <p>
+            مكتبة سينمائية تتحدث تلقائياً.
+        </p>
+
+        <small>
+            بيانات الأفلام والصور مقدمة عبر مصادر بيانات مرخصة.
+            IRAQ EMPIRE CINEMA غير تابع لـ TMDB.
+        </small>
+
+    </footer>
+
+
+    <!-- SEARCH -->
 
     <div
         class="search-overlay"
         id="searchOverlay"
+        hidden
     >
 
-        <div class="search-box">
+        <div class="search-panel">
 
             <button
-                class="close-search"
+                class="close-btn"
                 id="closeSearch"
             >
                 ×
             </button>
 
-            <span>
-                NOVA SEARCH
+            <span class="kicker">
+                IRAQ EMPIRE SEARCH
             </span>
 
             <h2>
@@ -332,15 +630,15 @@
             </h2>
 
             <input
-                type="text"
                 id="searchInput"
+                type="search"
                 placeholder="اكتب اسم الفيلم..."
                 autocomplete="off"
             >
 
             <div
-                class="search-results"
                 id="searchResults"
+                class="search-results"
             ></div>
 
         </div>
@@ -348,591 +646,93 @@
     </div>
 
 
-    <!-- =========================
-         تفاصيل الفيلم
-    ========================== -->
+    <!-- MOVIE MODAL -->
 
     <div
         class="movie-modal"
         id="movieModal"
+        hidden
     >
 
-        <div class="movie-modal-content">
+        <div class="modal-card">
 
             <button
-                class="modal-close"
+                class="close-btn"
                 id="closeModal"
             >
                 ×
             </button>
 
+
             <div
-                class="modal-poster"
-                id="modalPoster"
+                class="modal-backdrop"
+                id="modalBackdrop"
             ></div>
 
-            <div class="modal-info">
 
-                <span
-                    class="modal-category"
-                    id="modalCategory"
-                ></span>
+            <div class="modal-body">
 
-                <h2 id="modalTitle"></h2>
+                <div
+                    class="modal-poster"
+                    id="modalPoster"
+                ></div>
 
-                <p
-                    class="modal-meta"
-                    id="modalMeta"
-                ></p>
 
-                <p
-                    class="modal-description"
-                    id="modalDescription"
-                ></p>
+                <div class="modal-details">
 
-                <button class="primary-button">
-                    مشاهدة الفيلم
-                </button>
+                    <span
+                        class="kicker"
+                        id="modalGenres"
+                    ></span>
+
+
+                    <h2 id="modalTitle"></h2>
+
+
+                    <div
+                        class="meta"
+                        id="modalMeta"
+                    ></div>
+
+
+                    <p id="modalOverview"></p>
+
+
+                    <div class="modal-actions">
+
+                        <button
+                            class="btn btn-primary"
+                            id="modalWatch"
+                        >
+                            المشاهدة
+                        </button>
+
+                        <button
+                            class="btn btn-ghost"
+                            id="modalCloseAlt"
+                        >
+                            إغلاق
+                        </button>
+
+                    </div>
+
+                </div>
 
             </div>
 
         </div>
-```html
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>NOVA CINEMA</title>
-
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            background: #08080b;
-            color: #fff;
-            font-family: Arial, sans-serif;
-            min-height: 100vh;
-        }
-
-        button {
-            font-family: inherit;
-            cursor: pointer;
-        }
-
-        /* =========================
-           الشريط العلوي
-        ========================= */
-
-        .navbar {
-            height: 76px;
-            padding: 0 45px;
-
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-
-            background: rgba(8, 8, 11, 0.96);
-            border-bottom: 1px solid #202027;
-
-            position: sticky;
-            top: 0;
-            z-index: 50;
-        }
-
-        .logo {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            font-weight: 900;
-            font-size: 22px;
-            letter-spacing: 1px;
-        }
-
-        .logo-nova {
-            color: #fff;
-        }
-
-        .logo-cinema {
-            color: #d7193f;
-        }
-
-        .nav {
-            display: flex;
-            gap: 10px;
-        }
-
-        .nav button {
-            border: 0;
-            background: transparent;
-            color: #92929b;
-            padding: 11px 18px;
-            border-radius: 10px;
-            font-size: 14px;
-        }
-
-        .nav button:hover,
-        .nav button.active {
-            background: #17171d;
-            color: #fff;
-        }
-
-        .search {
-            width: 42px;
-            height: 42px;
-            border-radius: 12px;
-            border: 1px solid #292931;
-            background: #111116;
-            color: #fff;
-            font-size: 18px;
-        }
-
-        /* =========================
-           الصفحة الرئيسية
-        ========================= */
-
-        .hero {
-            min-height: 470px;
-            padding: 70px 7%;
-
-            display: flex;
-            align-items: center;
-
-            background:
-                radial-gradient(
-                    circle at 15% 45%,
-                    rgba(181, 18, 45, 0.28),
-                    transparent 35%
-                ),
-                linear-gradient(
-                    90deg,
-                    #08080b,
-                    #0d0d12
-                );
-
-            border-bottom: 1px solid #19191f;
-        }
-
-        .hero-content {
-            max-width: 650px;
-        }
-
-        .label {
-            color: #d7193f;
-            font-size: 12px;
-            font-weight: bold;
-            letter-spacing: 2px;
-        }
-
-        .hero h1 {
-            margin-top: 18px;
-            font-size: clamp(42px, 7vw, 76px);
-            line-height: 1.05;
-            font-weight: 900;
-        }
-
-        .hero h1 span {
-            color: #d7193f;
-        }
-
-        .hero p {
-            margin-top: 22px;
-            color: #9999a3;
-            line-height: 1.9;
-            max-width: 520px;
-            font-size: 16px;
-        }
-
-        .hero-buttons {
-            display: flex;
-            gap: 12px;
-            margin-top: 30px;
-        }
-
-        .primary {
-            border: 0;
-            background: #d7193f;
-            color: #fff;
-            padding: 14px 24px;
-            border-radius: 11px;
-            font-weight: bold;
-        }
-
-        .primary:hover {
-            background: #ef2850;
-        }
-
-        .secondary {
-            border: 1px solid #303039;
-            background: #111116;
-            color: #fff;
-            padding: 14px 24px;
-            border-radius: 11px;
-        }
-
-        /* =========================
-           الأقسام
-        ========================= */
-
-        .section {
-            padding: 45px 7%;
-        }
-
-        .section-head {
-            display: flex;
-            align-items: end;
-            justify-content: space-between;
-            margin-bottom: 24px;
-        }
-
-        .section-head span {
-            color: #d7193f;
-            font-size: 11px;
-            letter-spacing: 2px;
-            font-weight: bold;
-        }
-
-        .section-head h2 {
-            margin-top: 7px;
-            font-size: 28px;
-        }
-
-        .movies {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 18px;
-        }
-
-        .movie {
-            background: #111116;
-            border: 1px solid #202027;
-            border-radius: 14px;
-            overflow: hidden;
-            transition: 0.2s;
-        }
-
-        .movie:hover {
-            transform: translateY(-5px);
-            border-color: #d7193f;
-        }
-
-        .poster {
-            height: 250px;
-
-            display: flex;
-            align-items: end;
-            padding: 15px;
-
-            background:
-                linear-gradient(
-                    180deg,
-                    #20202a,
-                    #0d0d11
-                );
-        }
-
-        .poster-number {
-            width: 42px;
-            height: 42px;
-            border-radius: 10px;
-
-            display: grid;
-            place-items: center;
-
-            background: #d7193f;
-            font-weight: 900;
-        }
-
-        .movie-info {
-            padding: 15px;
-        }
-
-        .movie-info h3 {
-            font-size: 16px;
-        }
-
-        .movie-info p {
-            margin-top: 7px;
-            color: #777780;
-            font-size: 12px;
-        }
-
-        /* =========================
-           التصنيفات
-        ========================= */
-
-        .categories {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 15px;
-        }
-
-        .category {
-            padding: 30px 20px;
-            border: 1px solid #24242c;
-            background: #111116;
-            border-radius: 14px;
-            text-align: center;
-            font-weight: bold;
-        }
-
-        .category:hover {
-            border-color: #d7193f;
-            background: #16161d;
-        }
-
-        /* =========================
-           الجوال
-        ========================= */
-
-        @media (max-width: 900px) {
-            .navbar {
-                padding: 0 18px;
-            }
-
-            .nav {
-                display: none;
-            }
-
-            .hero {
-                padding: 55px 22px;
-            }
-
-            .section {
-                padding: 35px 22px;
-            }
-
-            .movies {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .categories {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        @media (max-width: 500px) {
-            .movies {
-                grid-template-columns: 1fr 1fr;
-                gap: 10px;
-            }
-
-            .poster {
-                height: 190px;
-            }
-
-            .hero h1 {
-                font-size: 42px;
-            }
-        }
-    </style>
-</head>
-
-<body>
-
-    <header class="navbar">
-
-        <div class="logo">
-            <span class="logo-nova">NOVA</span>
-            <span class="logo-cinema">CINEMA</span>
-        </div>
-
-        <nav class="nav">
-            <button class="active" onclick="goHome()">الرئيسية</button>
-            <button onclick="showMovies()">الأفلام</button>
-            <button onclick="showCategories()">التصنيفات</button>
-        </nav>
-
-        <button class="search" onclick="searchMovie()">⌕</button>
-
-    </header>
-
-    <main>
-
-        <section class="hero">
-
-            <div class="hero-content">
-
-                <div class="label">
-                    NOVA CINEMA ORIGINAL
-                </div>
-
-                <h1>
-                    عالم السينما
-                    <br>
-                    <span>بين يديك</span>
-                </h1>
-
-                <p>
-                    استكشف عالمًا من الأفلام داخل
-                    NOVA CINEMA واستمتع بتجربة سينمائية
-                    مختلفة داخل Discord.
-                </p>
-
-                <div class="hero-buttons">
-
-                    <button
-                        class="primary"
-                        onclick="showMovies()"
-                    >
-                        استكشف الأفلام
-                    </button>
-
-                    <button
-                        class="secondary"
-                        onclick="showCategories()"
-                    >
-                        التصنيفات
-                    </button>
-
-                </div>
-
-            </div>
-
-        </section>
-
-        <section class="section">
-
-            <div class="section-head">
-                <div>
-                    <span>NOVA PICKS</span>
-                    <h2>الأكثر مشاهدة</h2>
-                </div>
-            </div>
-
-            <div class="movies">
-
-                <div class="movie">
-                    <div class="poster">
-                        <div class="poster-number">01</div>
-                    </div>
-                    <div class="movie-info">
-                        <h3>مدينة الظلال</h3>
-                        <p>أكشن • 2026</p>
-                    </div>
-                </div>
-
-                <div class="movie">
-                    <div class="poster">
-                        <div class="poster-number">02</div>
-                    </div>
-                    <div class="movie-info">
-                        <h3>آخر ضوء</h3>
-                        <p>دراما • 2026</p>
-                    </div>
-                </div>
-
-                <div class="movie">
-                    <div class="poster">
-                        <div class="poster-number">03</div>
-                    </div>
-                    <div class="movie-info">
-                        <h3>المنزل الأسود</h3>
-                        <p>رعب • 2026</p>
-                    </div>
-                </div>
-
-                <div class="movie">
-                    <div class="poster">
-                        <div class="poster-number">04</div>
-                    </div>
-                    <div class="movie-info">
-                        <h3>رحلة مجنونة</h3>
-                        <p>كوميديا • 2026</p>
-                    </div>
-                </div>
-
-                <div class="movie">
-                    <div class="poster">
-                        <div class="poster-number">05</div>
-                    </div>
-                    <div class="movie-info">
-                        <h3>مملكة النار</h3>
-                        <p>خيال • 2026</p>
-                    </div>
-                </div>
-
-            </div>
-
-        </section>
-
-        <section class="section">
-
-            <div class="section-head">
-                <div>
-                    <span>EXPLORE</span>
-                    <h2>التصنيفات</h2>
-                </div>
-            </div>
-
-            <div class="categories">
-
-                <div class="category">أكشن</div>
-                <div class="category">دراما</div>
-                <div class="category">رعب</div>
-                <div class="category">كوميديا</div>
-                <div class="category">خيال</div>
-
-            </div>
-
-        </section>
-
-    </main>
-
-    <script>
-        function goHome() {
-            window.scrollTo({
-                top: 0,
-                behavior: "smooth"
-            });
-        }
-
-        function showMovies() {
-            document.querySelector(".section").scrollIntoView({
-                behavior: "smooth"
-            });
-        }
-
-        function showCategories() {
-            const sections = document.querySelectorAll(".section");
-
-            if (sections[1]) {
-                sections[1].scrollIntoView({
-                    behavior: "smooth"
-                });
-            }
-        }
-
-        function searchMovie() {
-            const movie = prompt("اكتب اسم الفيلم:");
-
-            if (!movie) {
-                return;
-            }
-
-            alert("بحث NOVA CINEMA عن: " + movie);
-        }
-
-        console.log("NOVA CINEMA UI ONLINE");
-    </script>
-
-</body>
-</html>
-```
 
     </div>
 
 
-    <!-- =========================
-         JavaScript
-    ========================== -->
+    <div
+        class="toast"
+        id="toast"
+    ></div>
+
 
     <script src="index.js"></script>
 
 </body>
+
 </html>
