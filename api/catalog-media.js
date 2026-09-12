@@ -1,28 +1,50 @@
 "use strict";
 
-const { getAniListMangaCatalog } = require("../lib/anilist-media");
+const { getAniListMangaCatalog, getAniListNovelCatalog } = require("../lib/anilist-media");
+
+function uniqueById(items) {
+    const seen = new Set();
+    return items.filter(item => {
+        const id = String(item?.id || "");
+        if (!id || seen.has(id)) return false;
+        seen.add(id);
+        return true;
+    });
+}
 
 module.exports = async function handler(req, res) {
     try {
-        res.setHeader("Cache-Control", "s-maxage=300, stale-while-revalidate=900");
+        res.setHeader("Cache-Control", "s-maxage=600, stale-while-revalidate=1800");
         res.setHeader("Content-Type", "application/json; charset=utf-8");
 
-        const page = Math.max(1, Number(new URL(req.url, `https://${req.headers.host || "localhost"}`).searchParams.get("page") || 1));
-        const items = await getAniListMangaCatalog(page, 24);
+        const url = new URL(req.url, `https://${req.headers.host || "localhost"}`);
+        const page = Math.max(1, Number(url.searchParams.get("page") || 1));
+        const perPage = Math.min(50, Math.max(24, Number(url.searchParams.get("perPage") || 50)));
 
-        const manga = items.filter(item => item.type === "manga");
-        const manhwa = items.filter(item => item.type === "manhwa");
+        const [general, manhwa, novels] = await Promise.all([
+            getAniListMangaCatalog(page, perPage),
+            getAniListMangaCatalog(page, Math.min(perPage, 30), { country: "KR" }),
+            getAniListNovelCatalog(page, Math.min(perPage, 30))
+        ]);
+
+        const manga = uniqueById(general.filter(item => item.type === "manga"));
+        const generalManhwa = general.filter(item => item.type === "manhwa");
+        const manhwaOnly = uniqueById([...manhwa.filter(item => item.type === "manhwa"), ...generalManhwa]);
+        const novelItems = uniqueById(novels.filter(item => item.type === "novel"));
+        const items = uniqueById([...manga, ...manhwaOnly, ...novelItems]);
 
         return res.status(200).json({
             success: true,
             manga,
-            manhwa,
+            manhwa: manhwaOnly,
+            novels: novelItems,
             items,
             meta: {
                 page,
                 count: items.length,
                 mangaCount: manga.length,
-                manhwaCount: manhwa.length
+                manhwaCount: manhwaOnly.length,
+                novelCount: novelItems.length
             }
         });
     } catch (error) {
@@ -31,8 +53,9 @@ module.exports = async function handler(req, res) {
             success: false,
             manga: [],
             manhwa: [],
+            novels: [],
             items: [],
-            error: "تعذر تحميل مكتبة المانغا والمانهوا حاليًا."
+            error: "تعذر تحميل مكتبة المانغا والمانهوا والروايات حاليًا."
         });
     }
 };
