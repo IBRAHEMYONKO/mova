@@ -11,25 +11,26 @@ const {
 } = require("../lib/community-service");
 
 test("comment payload keeps work and episode context", () => {
-    assert.deepEqual(buildCommentInsert({
+    const result = buildCommentInsert({
         userId: "user-1",
         itemId: "show-1",
         itemType: "series",
         seasonNumber: 2,
         episodeNumber: 7,
         body: "حلقة ممتازة"
-    }), {
-        user_id: "user-1",
-        item_id: "show-1",
-        item_type: "series",
-        season_number: 2,
-        episode_number: 7,
-        body: "حلقة ممتازة"
     });
+    assert.equal(result.user_id, "user-1");
+    assert.equal(result.item_id, "show-1");
+    assert.equal(result.item_type, "series");
+    assert.equal(result.season_number, 2);
+    assert.equal(result.episode_number, 7);
+    assert.equal(result.body, "حلقة ممتازة");
 });
 
 test("comment update trims text and rejects empty content", () => {
-    assert.deepEqual(buildCommentUpdate("  تعليق جديد  "), { body: "تعليق جديد" });
+    const result = buildCommentUpdate("  تعليق جديد  ");
+    assert.equal(result.body, "تعليق جديد");
+    assert.ok(result.updated_at);
     assert.throws(() => buildCommentUpdate("   "), /Invalid comment text/);
 });
 
