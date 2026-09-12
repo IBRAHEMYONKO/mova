@@ -2,10 +2,40 @@
 
 /* =========================================================
    IRAQ EMPIRE CINEMA
-   FRONTEND ENGINE
+   MULTI SOURCE FRONTEND ENGINE
+   ---------------------------------------------------------
+   - يجمع البيانات من API الموقع
+   - يدعم مصادر إضافية عامة
+   - إزالة التكرار
+   - فلترة المحتوى غير العربي
+   - أفلام + مسلسلات + أنمي
+   - بحث
+   - تصنيفات
+   - مودال
+   - بدون Discord Token
 ========================================================= */
 
 const API_BASE = "/api";
+
+const CONFIG = {
+    MAX_DIRECT_SOURCE_ITEMS: 80,
+    MAX_FINAL_ITEMS: 5000,
+    SEARCH_LIMIT: 40,
+    MOVIE_LIMIT: 24,
+    SERIES_LIMIT: 24,
+    ANIME_LIMIT: 24,
+
+    // إذا كان true فلن يظهر العمل إذا لم تتوفر له
+    // معلومات عربية كافية.
+    REQUIRE_ARABIC_METADATA: true,
+
+    // مصادر عامة لا تحتاج API Key.
+    PUBLIC_SOURCES: {
+        TVMAZE: true,
+        JIKAN: true,
+        ANILIST: true
+    }
+};
 
 
 /* =========================================================
@@ -38,13 +68,22 @@ const state = {
 
     currentItem: null,
 
-    movieLimit: 24
+    movieLimit: CONFIG.MOVIE_LIMIT,
+
+    loading: false,
+
+    sources: {
+        local: false,
+        tvmaze: false,
+        jikan: false,
+        anilist: false
+    }
 
 };
 
 
 /* =========================================================
-   DOM
+   DOM HELPERS
 ========================================================= */
 
 const $ = selector =>
@@ -60,150 +99,100 @@ const $$ = selector =>
    ELEMENTS
 ========================================================= */
 
-const movieGrid =
-    $("#movieGrid");
+const movieGrid = $("#movieGrid");
+const seriesGrid = $("#seriesGrid");
+const animeGrid = $("#animeGrid");
+const popularGrid = $("#popularGrid");
 
-const seriesGrid =
-    $("#seriesGrid");
+const movieCount = $("#movieCount");
+const seriesCount = $("#seriesCount");
+const animeCount = $("#animeCount");
 
-const animeGrid =
-    $("#animeGrid");
+const statusText = $("#statusText");
+const toast = $("#toast");
 
-const popularGrid =
-    $("#popularGrid");
+const searchOverlay = $("#searchOverlay");
+const searchInput = $("#searchInput");
+const searchResults = $("#searchResults");
 
-const movieCount =
-    $("#movieCount");
+const movieModal = $("#movieModal");
+const modalTitle = $("#modalTitle");
+const modalPoster = $("#modalPoster");
+const modalBackdrop = $("#modalBackdrop");
+const modalOverview = $("#modalOverview");
+const modalMeta = $("#modalMeta");
+const modalGenres = $("#modalGenres");
+const modalType = $("#modalType");
+const modalExtra = $("#modalExtra");
+const modalWatch = $("#modalWatch");
 
-const seriesCount =
-    $("#seriesCount");
+const emptyState = $("#emptyState");
+const seriesEmptyState = $("#seriesEmptyState");
+const animeEmptyState = $("#animeEmptyState");
 
-const animeCount =
-    $("#animeCount");
-
-const statusText =
-    $("#statusText");
-
-const toast =
-    $("#toast");
-
-const searchOverlay =
-    $("#searchOverlay");
-
-const searchInput =
-    $("#searchInput");
-
-const searchResults =
-    $("#searchResults");
-
-const movieModal =
-    $("#movieModal");
-
-const modalTitle =
-    $("#modalTitle");
-
-const modalPoster =
-    $("#modalPoster");
-
-const modalBackdrop =
-    $("#modalBackdrop");
-
-const modalOverview =
-    $("#modalOverview");
-
-const modalMeta =
-    $("#modalMeta");
-
-const modalGenres =
-    $("#modalGenres");
-
-const modalType =
-    $("#modalType");
-
-const modalExtra =
-    $("#modalExtra");
-
-const modalWatch =
-    $("#modalWatch");
-
-const emptyState =
-    $("#emptyState");
-
-const seriesEmptyState =
-    $("#seriesEmptyState");
-
-const animeEmptyState =
-    $("#animeEmptyState");
-
-const loadMore =
-    $("#loadMore");
+const loadMore = $("#loadMore");
 
 
 /* =========================================================
-   HELPERS
+   HTML SAFETY
 ========================================================= */
 
 function escapeHtml(value) {
 
     return String(value ?? "")
-        .replace(
-            /&/g,
-            "&amp;"
-        )
-        .replace(
-            /</g,
-            "&lt;"
-        )
-        .replace(
-            />/g,
-            "&gt;"
-        )
-        .replace(
-            /"/g,
-            "&quot;"
-        )
-        .replace(
-            /'/g,
-            "&#039;"
-        );
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+
+}
+
+
+/* =========================================================
+   NUMBER
+========================================================= */
+
+function number(value) {
+
+    const n = Number(value);
+
+    return Number.isFinite(n)
+        ? n
+        : 0;
 
 }
 
 
 function formatNumber(value) {
 
-    const number =
-        Number(value);
+    const n = number(value);
 
-    if (
-        !Number.isFinite(number)
-    ) {
+    if (!n) {
         return "—";
     }
 
-    return number
-        .toLocaleString("ar-IQ");
+    return n.toLocaleString("ar-IQ");
 
 }
 
 
 function formatRating(value) {
 
-    const number =
-        Number(value);
+    const n = number(value);
 
-    if (
-        !Number.isFinite(number) ||
-        number <= 0
-    ) {
+    if (!n) {
         return "—";
     }
 
-    return number
-        .toFixed(1);
+    return n.toFixed(1);
 
 }
 
+
+/* =========================================================
+   DATE
+========================================================= */
 
 function formatDate(value) {
 
@@ -211,14 +200,9 @@ function formatDate(value) {
         return "غير معروف";
     }
 
-    const date =
-        new Date(value);
+    const date = new Date(value);
 
-    if (
-        Number.isNaN(
-            date.getTime()
-        )
-    ) {
+    if (Number.isNaN(date.getTime())) {
         return String(value);
     }
 
@@ -234,25 +218,34 @@ function formatDate(value) {
 }
 
 
+/* =========================================================
+   YEAR
+========================================================= */
+
 function getYear(item) {
 
-    if (item.year) {
-        return item.year;
+    if (item?.year) {
+        return String(item.year);
     }
 
-    if (item.releaseDate) {
+    if (item?.releaseDate) {
         return String(
             item.releaseDate
         ).slice(0, 4);
     }
 
     return "—";
+
 }
 
 
+/* =========================================================
+   TYPE
+========================================================= */
+
 function getTypeName(type) {
 
-    switch (type) {
+    switch (String(type || "").toLowerCase()) {
 
         case "movie":
             return "فيلم";
@@ -271,32 +264,81 @@ function getTypeName(type) {
 }
 
 
+/* =========================================================
+   POSTER
+========================================================= */
+
 function getPoster(item) {
 
     return (
-        item.poster ||
+        item?.poster ||
+        item?.image ||
+        item?.images?.jpg?.large_image_url ||
+        item?.images?.jpg?.image_url ||
+        item?.coverImage?.large ||
         ""
     );
 
 }
 
 
-function getGenres(item) {
+/* =========================================================
+   BACKDROP
+========================================================= */
 
-    if (
-        !Array.isArray(
-            item.genres
-        )
-    ) {
-        return [];
-    }
+function getBackdrop(item) {
 
-    return item.genres
-        .filter(Boolean)
-        .slice(0, 3);
+    return (
+        item?.backdrop ||
+        item?.banner ||
+        item?.images?.jpg?.large_image_url ||
+        item?.coverImage?.extraLarge ||
+        ""
+    );
 
 }
 
+
+/* =========================================================
+   GENRES
+========================================================= */
+
+function getGenres(item) {
+
+    if (
+        Array.isArray(item?.genres)
+    ) {
+
+        return item.genres
+            .filter(Boolean)
+            .map(value => {
+
+                if (
+                    typeof value === "object"
+                ) {
+                    return (
+                        value.name ||
+                        value.title ||
+                        ""
+                    );
+                }
+
+                return String(value);
+
+            })
+            .filter(Boolean)
+            .slice(0, 5);
+
+    }
+
+    return [];
+
+}
+
+
+/* =========================================================
+   TOAST
+========================================================= */
 
 function showToast(message) {
 
@@ -304,28 +346,32 @@ function showToast(message) {
         return;
     }
 
-    toast.textContent =
-        message;
+    toast.textContent = message;
 
-    toast.classList.add(
-        "show"
-    );
+    toast.classList.add("show");
 
     clearTimeout(
         showToast.timer
     );
 
     showToast.timer =
-        setTimeout(() => {
+        setTimeout(
+            () => {
 
-            toast.classList.remove(
-                "show"
-            );
+                toast.classList.remove(
+                    "show"
+                );
 
-        }, 2800);
+            },
+            3000
+        );
 
 }
 
+
+/* =========================================================
+   LOADING
+========================================================= */
 
 function setLoading(
     element,
@@ -338,11 +384,8 @@ function setLoading(
 
     element.innerHTML =
         Array.from(
-            {
-                length: count
-            }
-        )
-            .map(() => `
+            { length: count },
+            () => `
                 <div class="loading-card">
                     <div class="loading-poster"></div>
 
@@ -351,28 +394,30 @@ function setLoading(
                         <span></span>
                     </div>
                 </div>
-            `)
-            .join("");
+            `
+        ).join("");
 
 }
 
 
 /* =========================================================
-   API
+   API FETCH
 ========================================================= */
 
-async function apiFetch(
-    endpoint
+async function fetchJSON(
+    url,
+    options = {}
 ) {
 
     const response =
         await fetch(
-            `${API_BASE}${endpoint}`,
+            url,
             {
-                method: "GET",
+                ...options,
                 headers: {
                     Accept:
-                        "application/json"
+                        "application/json",
+                    ...(options.headers || {})
                 },
                 cache: "no-store"
             }
@@ -381,15 +426,1439 @@ async function apiFetch(
     if (!response.ok) {
 
         throw new Error(
-            `API ${response.status}`
+            `HTTP ${response.status}`
         );
 
     }
 
-    const data =
-        await response.json();
+    return response.json();
 
-    return data;
+}
+
+
+/* =========================================================
+   LOCAL API
+========================================================= */
+
+async function fetchLocalLibrary() {
+
+    const data =
+        await fetchJSON(
+            `${API_BASE}/movies?sort=popular`
+        );
+
+    if (
+        !data ||
+        !Array.isArray(
+            data.movies
+        )
+    ) {
+
+        throw new Error(
+            "Invalid local library"
+        );
+
+    }
+
+    state.sources.local = true;
+
+    return data.movies;
+
+}
+
+
+/* =========================================================
+   TVMAZE
+   Public API
+========================================================= */
+
+async function fetchTVMaze() {
+
+    if (!CONFIG.PUBLIC_SOURCES.TVMAZE) {
+        return [];
+    }
+
+    const results = [];
+
+    const pages = [0, 1];
+
+    for (const page of pages) {
+
+        try {
+
+            const data =
+                await fetchJSON(
+                    `https://api.tvmaze.com/shows?page=${page}`
+                );
+
+            if (!Array.isArray(data)) {
+                continue;
+            }
+
+            for (const show of data) {
+
+                const title =
+                    show.name ||
+                    show.originalName;
+
+                if (!title) {
+                    continue;
+                }
+
+                const genres =
+                    Array.isArray(
+                        show.genres
+                    )
+                        ? show.genres
+                        : [];
+
+                const premiered =
+                    show.premiered ||
+                    "";
+
+                const year =
+                    premiered
+                        ? String(
+                            premiered
+                        ).slice(0, 4)
+                        : "";
+
+                const rating =
+                    show.rating?.average ||
+                    0;
+
+                results.push({
+
+                    id:
+                        `tvmaze:${show.id}`,
+
+                    tvmazeId:
+                        show.id,
+
+                    source:
+                        "tvmaze",
+
+                    type:
+                        "series",
+
+                    title:
+                        cleanText(
+                            title
+                        ),
+
+                    originalTitle:
+                        cleanText(
+                            title
+                        ),
+
+                    overview:
+                        stripHtml(
+                            show.summary ||
+                            ""
+                        ),
+
+                    poster:
+                        show.image?.original ||
+                        show.image?.medium ||
+                        "",
+
+                    backdrop:
+                        show.image?.original ||
+                        "",
+
+                    releaseDate:
+                        premiered,
+
+                    year,
+
+                    rating,
+
+                    votes:
+                        show.rating?.average
+                            ? 1
+                            : 0,
+
+                    popularity:
+                        rating * 10,
+
+                    genres,
+
+                    status:
+                        show.status ||
+                        "",
+
+                    language:
+                        show.language ||
+                        "",
+
+                    country:
+                        show.network?.country?.name ||
+                        "",
+
+                    runtime:
+                        show.runtime
+                            ? `${show.runtime} دقيقة`
+                            : "",
+
+                    episodes:
+                        "",
+
+                    season:
+                        "",
+
+                    trailer:
+                        "",
+
+                    sourceUrl:
+                        show.url ||
+                        "",
+
+                    network:
+                        show.network?.name ||
+                        show.webChannel?.name ||
+                        "",
+
+                    production:
+                        show.network?.name ||
+                        "",
+
+                    updatedAt:
+                        new Date().toISOString()
+
+                });
+
+            }
+
+        } catch (error) {
+
+            console.warn(
+                "TVMAZE SOURCE ERROR:",
+                error.message
+            );
+
+        }
+
+    }
+
+    if (results.length) {
+        state.sources.tvmaze = true;
+    }
+
+    return results;
+
+}
+
+
+/* =========================================================
+   JIKAN
+   MyAnimeList public API
+========================================================= */
+
+async function fetchJikan() {
+
+    if (!CONFIG.PUBLIC_SOURCES.JIKAN) {
+        return [];
+    }
+
+    const results = [];
+
+    const endpoints = [
+        "https://api.jikan.moe/v4/top/anime?limit=25",
+        "https://api.jikan.moe/v4/anime?status=airing&limit=25",
+        "https://api.jikan.moe/v4/anime?status=complete&limit=25"
+    ];
+
+    for (const endpoint of endpoints) {
+
+        try {
+
+            const data =
+                await fetchJSON(
+                    endpoint
+                );
+
+            if (
+                !data ||
+                !Array.isArray(
+                    data.data
+                )
+            ) {
+                continue;
+            }
+
+            for (const anime of data.data) {
+
+                if (!anime?.mal_id) {
+                    continue;
+                }
+
+                const title =
+                    anime.title ||
+                    anime.title_english ||
+                    anime.title_japanese ||
+                    "";
+
+                if (!title) {
+                    continue;
+                }
+
+                const genres =
+                    Array.isArray(
+                        anime.genres
+                    )
+                        ? anime.genres
+                            .map(
+                                item =>
+                                    item.name
+                            )
+                            .filter(Boolean)
+                        : [];
+
+                const aired =
+                    anime.aired?.from ||
+                    "";
+
+                const year =
+                    aired
+                        ? String(
+                            aired
+                        ).slice(0, 4)
+                        : "";
+
+                results.push({
+
+                    id:
+                        `mal:${anime.mal_id}`,
+
+                    malId:
+                        anime.mal_id,
+
+                    source:
+                        "jikan",
+
+                    type:
+                        "anime",
+
+                    title:
+                        cleanText(
+                            title
+                        ),
+
+                    originalTitle:
+                        cleanText(
+                            anime.title_japanese ||
+                            title
+                        ),
+
+                    englishTitle:
+                        cleanText(
+                            anime.title_english ||
+                            ""
+                        ),
+
+                    overview:
+                        cleanText(
+                            anime.synopsis ||
+                            ""
+                        ),
+
+                    poster:
+                        anime.images?.jpg?.large_image_url ||
+                        anime.images?.jpg?.image_url ||
+                        "",
+
+                    backdrop:
+                        anime.images?.jpg?.large_image_url ||
+                        "",
+
+                    releaseDate:
+                        aired,
+
+                    year,
+
+                    rating:
+                        anime.score ||
+                        0,
+
+                    votes:
+                        anime.scored_by ||
+                        0,
+
+                    popularity:
+                        anime.popularity
+                            ? Math.max(
+                                0,
+                                100000 -
+                                anime.popularity
+                            )
+                            : 0,
+
+                    genres,
+
+                    status:
+                        anime.status ||
+                        "",
+
+                    language:
+                        "ja",
+
+                    country:
+                        "اليابان",
+
+                    runtime:
+                        anime.duration ||
+                        "",
+
+                    episodes:
+                        anime.episodes ||
+                        "",
+
+                    season:
+                        anime.season ||
+                        "",
+
+                    yearSeason:
+                        anime.year ||
+                        "",
+
+                    trailer:
+                        anime.trailer?.url ||
+                        "",
+
+                    sourceUrl:
+                        anime.url ||
+                        "",
+
+                    production:
+                        Array.isArray(
+                            anime.studios
+                        )
+                            ? anime.studios
+                                .map(
+                                    studio =>
+                                        studio.name
+                                )
+                                .filter(Boolean)
+                            : [],
+
+                    updatedAt:
+                        new Date().toISOString()
+
+                });
+
+            }
+
+        } catch (error) {
+
+            console.warn(
+                "JIKAN SOURCE ERROR:",
+                error.message
+            );
+
+        }
+
+    }
+
+    if (results.length) {
+        state.sources.jikan = true;
+    }
+
+    return results;
+
+}
+
+
+/* =========================================================
+   ANILIST
+   Public GraphQL API
+========================================================= */
+
+async function fetchAniList() {
+
+    if (!CONFIG.PUBLIC_SOURCES.ANILIST) {
+        return [];
+    }
+
+    const query = `
+        query {
+            Page(
+                page: 1,
+                perPage: 50
+            ) {
+                media(
+                    type: ANIME,
+                    sort: POPULARITY_DESC
+                ) {
+                    id
+                    idMal
+                    title {
+                        romaji
+                        english
+                        native
+                    }
+                    description
+                    coverImage {
+                        large
+                        extraLarge
+                    }
+                    bannerImage
+                    startDate {
+                        year
+                        month
+                        day
+                    }
+                    averageScore
+                    popularity
+                    episodes
+                    duration
+                    status
+                    genres
+                    countryOfOrigin
+                    season
+                    seasonYear
+                    trailer {
+                        id
+                        site
+                    }
+                    siteUrl
+                }
+            }
+        }
+    `;
+
+    try {
+
+        const data =
+            await fetchJSON(
+                "https://graphql.anilist.co",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body:
+                        JSON.stringify({
+                            query
+                        })
+                }
+            );
+
+        const media =
+            data?.data?.Page?.media;
+
+        if (!Array.isArray(media)) {
+            return [];
+        }
+
+        const results =
+            media
+                .map(anime => {
+
+                    const title =
+                        anime.title?.english ||
+                        anime.title?.romaji ||
+                        anime.title?.native ||
+                        "";
+
+                    if (!title) {
+                        return null;
+                    }
+
+                    const releaseDate =
+                        buildDate(
+                            anime.startDate
+                        );
+
+                    let trailer = "";
+
+                    if (
+                        anime.trailer?.site ===
+                        "youtube" &&
+                        anime.trailer?.id
+                    ) {
+
+                        trailer =
+                            `https://www.youtube.com/watch?v=${anime.trailer.id}`;
+
+                    }
+
+                    return {
+
+                        id:
+                            `anilist:${anime.id}`,
+
+                        anilistId:
+                            anime.id,
+
+                        malId:
+                            anime.idMal ||
+                            null,
+
+                        source:
+                            "anilist",
+
+                        type:
+                            "anime",
+
+                        title:
+                            cleanText(
+                                title
+                            ),
+
+                        originalTitle:
+                            cleanText(
+                                anime.title?.native ||
+                                anime.title?.romaji ||
+                                title
+                            ),
+
+                        englishTitle:
+                            cleanText(
+                                anime.title?.english ||
+                                ""
+                            ),
+
+                        overview:
+                            cleanText(
+                                anime.description ||
+                                ""
+                            ),
+
+                        poster:
+                            anime.coverImage?.extraLarge ||
+                            anime.coverImage?.large ||
+                            "",
+
+                        backdrop:
+                            anime.bannerImage ||
+                            "",
+
+                        releaseDate,
+
+                        year:
+                            anime.startDate?.year ||
+                            "",
+
+                        rating:
+                            number(
+                                anime.averageScore
+                            ) / 10,
+
+                        votes:
+                            anime.popularity ||
+                            0,
+
+                        popularity:
+                            anime.popularity ||
+                            0,
+
+                        genres:
+                            Array.isArray(
+                                anime.genres
+                            )
+                                ? anime.genres
+                                : [],
+
+                        status:
+                            anime.status ||
+                            "",
+
+                        language:
+                            "ja",
+
+                        country:
+                            anime.countryOfOrigin ||
+                            "اليابان",
+
+                        runtime:
+                            anime.duration
+                                ? `${anime.duration} دقيقة`
+                                : "",
+
+                        episodes:
+                            anime.episodes ||
+                            "",
+
+                        season:
+                            anime.season ||
+                            "",
+
+                        yearSeason:
+                            anime.seasonYear ||
+                            "",
+
+                        trailer,
+
+                        sourceUrl:
+                            anime.siteUrl ||
+                            "",
+
+                        updatedAt:
+                            new Date().toISOString()
+
+                    };
+
+                })
+                .filter(Boolean);
+
+        if (results.length) {
+            state.sources.anilist = true;
+        }
+
+        return results;
+
+    } catch (error) {
+
+        console.warn(
+            "ANILIST SOURCE ERROR:",
+            error.message
+        );
+
+        return [];
+
+    }
+
+}
+
+
+/* =========================================================
+   CLEAN TEXT
+========================================================= */
+
+function cleanText(value) {
+
+    return String(value ?? "")
+        .replace(/\s+/g, " ")
+        .trim();
+
+}
+
+
+function stripHtml(value) {
+
+    return cleanText(
+        String(value ?? "")
+            .replace(
+                /<[^>]*>/g,
+                " "
+            )
+    );
+
+}
+
+
+/* =========================================================
+   DATE BUILDER
+========================================================= */
+
+function buildDate(date) {
+
+    if (!date) {
+        return "";
+    }
+
+    if (!date.year) {
+        return "";
+    }
+
+    const month =
+        String(
+            date.month || 1
+        ).padStart(2, "0");
+
+    const day =
+        String(
+            date.day || 1
+        ).padStart(2, "0");
+
+    return `${date.year}-${month}-${day}`;
+
+}
+
+
+/* =========================================================
+   ARABIC DETECTION
+========================================================= */
+
+function containsArabic(value) {
+
+    return /[\u0600-\u06FF]/.test(
+        String(value || "")
+    );
+
+}
+
+
+/* =========================================================
+   ARABIC METADATA
+   ---------------------------------------------------------
+   مهم:
+   هذا لا يعني وجود ترجمة فيديو.
+   بل يعني أن بيانات العمل نفسها تحتوي
+   على معلومات عربية.
+========================================================= */
+
+function hasArabicMetadata(item) {
+
+    if (!CONFIG.REQUIRE_ARABIC_METADATA) {
+        return true;
+    }
+
+    const fields = [
+
+        item.title,
+
+        item.originalTitle,
+
+        item.englishTitle,
+
+        item.overview,
+
+        ...(Array.isArray(item.genres)
+            ? item.genres
+            : [])
+
+    ];
+
+    const arabicText =
+        fields.some(
+            value =>
+                containsArabic(value)
+        );
+
+    const language =
+        String(
+            item.language ||
+            ""
+        ).toLowerCase();
+
+    const explicitArabic =
+        [
+            "ar",
+            "ara",
+            "arabic",
+            "العربية",
+            "عربي"
+        ].includes(language);
+
+    return (
+        arabicText ||
+        explicitArabic
+    );
+
+}
+
+
+/* =========================================================
+   NORMALIZE ITEM
+========================================================= */
+
+function normalizeItem(item) {
+
+    if (!item) {
+        return null;
+    }
+
+    const type =
+        String(
+            item.type ||
+            ""
+        ).toLowerCase();
+
+    let finalType = type;
+
+    if (
+        type !== "movie" &&
+        type !== "series" &&
+        type !== "anime"
+    ) {
+        return null;
+    }
+
+    const genres =
+        getGenres(item);
+
+    const normalized = {
+
+        ...item,
+
+        id:
+            item.id ||
+            createFallbackId(item),
+
+        type:
+            finalType,
+
+        title:
+            cleanText(
+                item.title ||
+                item.originalTitle ||
+                item.englishTitle ||
+                "بدون عنوان"
+            ),
+
+        originalTitle:
+            cleanText(
+                item.originalTitle ||
+                ""
+            ),
+
+        englishTitle:
+            cleanText(
+                item.englishTitle ||
+                ""
+            ),
+
+        overview:
+            cleanText(
+                item.overview ||
+                ""
+            ),
+
+        poster:
+            getPoster(item),
+
+        backdrop:
+            getBackdrop(item),
+
+        year:
+            getYear(item),
+
+        rating:
+            number(item.rating),
+
+        popularity:
+            number(item.popularity),
+
+        votes:
+            number(item.votes),
+
+        genres,
+
+        source:
+            item.source ||
+            "unknown"
+
+    };
+
+    return normalized;
+
+}
+
+
+/* =========================================================
+   FALLBACK ID
+========================================================= */
+
+function createFallbackId(item) {
+
+    const title =
+        cleanText(
+            item.title ||
+            item.originalTitle ||
+            ""
+        )
+            .toLowerCase();
+
+    const year =
+        getYear(item);
+
+    const type =
+        item.type ||
+        "content";
+
+    return `${type}:${title}:${year}`;
+
+}
+
+
+/* =========================================================
+   DEDUPLICATION KEY
+========================================================= */
+
+function getStrongKeys(item) {
+
+    const keys = [];
+
+    if (item.tmdbId) {
+        keys.push(
+            `tmdb:${item.tmdbId}`
+        );
+    }
+
+    if (item.imdbId) {
+        keys.push(
+            `imdb:${item.imdbId}`
+        );
+    }
+
+    if (item.tvmazeId) {
+        keys.push(
+            `tvmaze:${item.tvmazeId}`
+        );
+    }
+
+    if (item.malId) {
+        keys.push(
+            `mal:${item.malId}`
+        );
+    }
+
+    if (item.anilistId) {
+        keys.push(
+            `anilist:${item.anilistId}`
+        );
+    }
+
+    return keys;
+
+}
+
+
+function normalizeTitle(title) {
+
+    return cleanText(title)
+        .toLowerCase()
+        .replace(
+            /[^\p{L}\p{N}]+/gu,
+            ""
+        );
+
+}
+
+
+/* =========================================================
+   DUPLICATE CHECK
+========================================================= */
+
+function areSameItems(a, b) {
+
+    if (!a || !b) {
+        return false;
+    }
+
+    if (
+        a.type !==
+        b.type
+    ) {
+        return false;
+    }
+
+    const aKeys =
+        getStrongKeys(a);
+
+    const bKeys =
+        getStrongKeys(b);
+
+    for (const key of aKeys) {
+
+        if (bKeys.includes(key)) {
+            return true;
+        }
+
+    }
+
+    const aTitles = [
+
+        normalizeTitle(
+            a.title
+        ),
+
+        normalizeTitle(
+            a.originalTitle
+        ),
+
+        normalizeTitle(
+            a.englishTitle
+        )
+
+    ].filter(Boolean);
+
+    const bTitles = [
+
+        normalizeTitle(
+            b.title
+        ),
+
+        normalizeTitle(
+            b.originalTitle
+        ),
+
+        normalizeTitle(
+            b.englishTitle
+        )
+
+    ].filter(Boolean);
+
+    const sameTitle =
+        aTitles.some(
+            title =>
+                bTitles.includes(
+                    title
+                )
+        );
+
+    if (!sameTitle) {
+        return false;
+    }
+
+    const yearA =
+        Number(
+            getYear(a)
+        );
+
+    const yearB =
+        Number(
+            getYear(b)
+        );
+
+    if (
+        yearA &&
+        yearB
+    ) {
+
+        return Math.abs(
+            yearA - yearB
+        ) <= 1;
+
+    }
+
+    return true;
+
+}
+
+
+/* =========================================================
+   MERGE TWO ITEMS
+   الأفضلية للمعلومات الأغنى
+========================================================= */
+
+function mergeItems(
+    oldItem,
+    newItem
+) {
+
+    const merged = {
+        ...oldItem
+    };
+
+    const fields = [
+
+        "tmdbId",
+        "tvmazeId",
+        "malId",
+        "anilistId",
+        "imdbId",
+
+        "title",
+        "originalTitle",
+        "englishTitle",
+
+        "overview",
+
+        "poster",
+        "backdrop",
+
+        "releaseDate",
+        "year",
+
+        "rating",
+        "votes",
+        "popularity",
+
+        "status",
+        "language",
+        "country",
+        "runtime",
+
+        "episodes",
+        "season",
+        "yearSeason",
+
+        "sourceUrl",
+        "trailer",
+
+        "director",
+        "writer",
+        "production",
+        "network"
+
+    ];
+
+    for (const field of fields) {
+
+        const oldValue =
+            merged[field];
+
+        const newValue =
+            newItem[field];
+
+        if (
+            isBetterValue(
+                oldValue,
+                newValue
+            )
+        ) {
+
+            merged[field] =
+                newValue;
+
+        }
+
+    }
+
+
+    const genres = [
+        ...getGenres(oldItem),
+        ...getGenres(newItem)
+    ];
+
+    merged.genres =
+        Array.from(
+            new Set(
+                genres
+                    .filter(Boolean)
+                    .map(
+                        value =>
+                            String(value)
+                                .trim()
+                    )
+            )
+        ).slice(0, 8);
+
+
+    if (
+        !merged.source &&
+        newItem.source
+    ) {
+
+        merged.source =
+            newItem.source;
+
+    }
+
+
+    merged.sources =
+        Array.from(
+            new Set(
+                [
+                    ...(Array.isArray(
+                        oldItem.sources
+                    )
+                        ? oldItem.sources
+                        : [
+                            oldItem.source
+                        ]),
+
+                    ...(Array.isArray(
+                        newItem.sources
+                    )
+                        ? newItem.sources
+                        : [
+                            newItem.source
+                        ])
+                ]
+                    .filter(Boolean)
+            )
+        );
+
+
+    return merged;
+
+}
+
+
+function isBetterValue(
+    oldValue,
+    newValue
+) {
+
+    if (
+        newValue === undefined ||
+        newValue === null ||
+        newValue === ""
+    ) {
+        return false;
+    }
+
+    if (
+        oldValue === undefined ||
+        oldValue === null ||
+        oldValue === ""
+    ) {
+        return true;
+    }
+
+    if (
+        Array.isArray(newValue)
+    ) {
+
+        return (
+            newValue.length >
+            (
+                Array.isArray(
+                    oldValue
+                )
+                    ? oldValue.length
+                    : 0
+            )
+        );
+
+    }
+
+    if (
+        typeof newValue === "string"
+    ) {
+
+        return (
+            newValue.length >
+            String(
+                oldValue
+            ).length
+        );
+
+    }
+
+    return false;
+
+}
+
+
+/* =========================================================
+   DEDUPLICATE ALL
+========================================================= */
+
+function deduplicateItems(
+    items
+) {
+
+    const finalItems = [];
+
+    for (const raw of items) {
+
+        const item =
+            normalizeItem(raw);
+
+        if (!item) {
+            continue;
+        }
+
+        // المحتوى الذي لا توجد له بيانات عربية
+        // لن يدخل للمكتبة النهائية.
+        if (
+            !hasArabicMetadata(
+                item
+            )
+        ) {
+            continue;
+        }
+
+        let duplicateIndex = -1;
+
+        for (
+            let index = 0;
+            index < finalItems.length;
+            index++
+        ) {
+
+            if (
+                areSameItems(
+                    finalItems[index],
+                    item
+                )
+            ) {
+
+                duplicateIndex =
+                    index;
+
+                break;
+
+            }
+
+        }
+
+        if (
+            duplicateIndex === -1
+        ) {
+
+            finalItems.push(
+                item
+            );
+
+        } else {
+
+            finalItems[
+                duplicateIndex
+            ] =
+                mergeItems(
+                    finalItems[
+                        duplicateIndex
+                    ],
+                    item
+                );
+
+        }
+
+        if (
+            finalItems.length >=
+            CONFIG.MAX_FINAL_ITEMS
+        ) {
+            break;
+        }
+
+    }
+
+    return finalItems;
+
+}
+
+
+/* =========================================================
+   SORT POPULAR
+========================================================= */
+
+function sortPopular(
+    items
+) {
+
+    return [...items]
+        .sort(
+            (a, b) => {
+
+                const popularityA =
+                    number(
+                        a.popularity
+                    );
+
+                const popularityB =
+                    number(
+                        b.popularity
+                    );
+
+                const ratingA =
+                    number(
+                        a.rating
+                    );
+
+                const ratingB =
+                    number(
+                        b.rating
+                    );
+
+                return (
+                    popularityB * 0.7 +
+                    ratingB * 30
+                ) -
+                (
+                    popularityA * 0.7 +
+                    ratingA * 30
+                );
+
+            }
+        );
 
 }
 
@@ -403,21 +1872,13 @@ async function loadStatus() {
     try {
 
         const data =
-            await apiFetch(
-                "/status"
+            await fetchJSON(
+                `${API_BASE}/status`
             );
 
         if (
-            !data ||
-            data.success !== true
+            movieCount
         ) {
-            throw new Error(
-                "Invalid status response"
-            );
-        }
-
-
-        if (movieCount) {
 
             movieCount.textContent =
                 formatNumber(
@@ -426,8 +1887,9 @@ async function loadStatus() {
 
         }
 
-
-        if (seriesCount) {
+        if (
+            seriesCount
+        ) {
 
             seriesCount.textContent =
                 formatNumber(
@@ -436,8 +1898,9 @@ async function loadStatus() {
 
         }
 
-
-        if (animeCount) {
+        if (
+            animeCount
+        ) {
 
             animeCount.textContent =
                 formatNumber(
@@ -446,13 +1909,12 @@ async function loadStatus() {
 
         }
 
-
-        const updateElements =
+        const updates =
             document.querySelectorAll(
                 '[id="lastUpdate"]'
             );
 
-        updateElements.forEach(
+        updates.forEach(
             element => {
 
                 element.textContent =
@@ -465,29 +1927,12 @@ async function loadStatus() {
             }
         );
 
-
-        if (statusText) {
-
-            statusText.textContent =
-                `المكتبة تحتوي على ${formatNumber(
-                    data.total
-                )} عنصر`;
-
-        }
-
     } catch (error) {
 
-        console.error(
+        console.warn(
             "STATUS ERROR:",
-            error
+            error.message
         );
-
-        if (statusText) {
-
-            statusText.textContent =
-                "تعذر الاتصال بمكتبة المحتوى";
-
-        }
 
     }
 
@@ -495,33 +1940,72 @@ async function loadStatus() {
 
 
 /* =========================================================
-   LOAD ALL
+   LOAD ALL SOURCES
 ========================================================= */
 
 async function loadAll() {
 
+    if (state.loading) {
+        return;
+    }
+
+    state.loading = true;
+
     try {
 
-        const data =
-            await apiFetch(
-                "/movies?sort=popular"
-            );
+        const sourceResults =
+            await Promise.allSettled([
 
-        if (
-            !data ||
-            !Array.isArray(
-                data.movies
-            )
+                fetchLocalLibrary(),
+
+                fetchTVMaze(),
+
+                fetchJikan(),
+
+                fetchAniList()
+
+            ]);
+
+
+        const allRaw = [];
+
+
+        for (
+            const result of
+            sourceResults
         ) {
 
+            if (
+                result.status ===
+                "fulfilled" &&
+                Array.isArray(
+                    result.value
+                )
+            ) {
+
+                allRaw.push(
+                    ...result.value
+                );
+
+            }
+
+        }
+
+
+        if (!allRaw.length) {
+
             throw new Error(
-                "Invalid movies response"
+                "No content sources returned data"
             );
 
         }
 
+
         state.all =
-            data.movies;
+            deduplicateItems(
+                allRaw
+            );
+
 
         state.movies =
             state.all.filter(
@@ -530,12 +2014,14 @@ async function loadAll() {
                     "movie"
             );
 
+
         state.series =
             state.all.filter(
                 item =>
                     item.type ===
                     "series"
             );
+
 
         state.anime =
             state.all.filter(
@@ -544,34 +2030,25 @@ async function loadAll() {
                     "anime"
             );
 
+
         state.popular =
-            [...state.all]
-                .sort(
-                    (a, b) =>
-                        (
-                            Number(
-                                b.popularity
-                            ) || 0
-                        ) -
-                        (
-                            Number(
-                                a.popularity
-                            ) || 0
-                        )
-                )
-                .slice(
-                    0,
-                    12
-                );
+            sortPopular(
+                state.all
+            ).slice(
+                0,
+                12
+            );
 
 
         renderPopular();
-
         renderMovies();
-
         renderSeries();
-
         renderAnime();
+
+        updateCounters();
+
+        updateSourceStatus();
+
 
     } catch (error) {
 
@@ -602,13 +2079,81 @@ async function loadAll() {
             "تعذر تحميل الأنمي"
         );
 
+    } finally {
+
+        state.loading = false;
+
     }
 
 }
 
 
 /* =========================================================
-   FILTER MOVIES
+   COUNTERS
+========================================================= */
+
+function updateCounters() {
+
+    if (movieCount) {
+
+        movieCount.textContent =
+            formatNumber(
+                state.movies.length
+            );
+
+    }
+
+    if (seriesCount) {
+
+        seriesCount.textContent =
+            formatNumber(
+                state.series.length
+            );
+
+    }
+
+    if (animeCount) {
+
+        animeCount.textContent =
+            formatNumber(
+                state.anime.length
+            );
+
+    }
+
+    if (statusText) {
+
+        statusText.textContent =
+            `المكتبة تحتوي على ${formatNumber(
+                state.all.length
+            )} عمل عربي`;
+
+    }
+
+}
+
+
+/* =========================================================
+   SOURCE STATUS
+========================================================= */
+
+function updateSourceStatus() {
+
+    console.log(
+        "IRAQ EMPIRE CINEMA → SOURCES",
+        {
+            local: state.sources.local,
+            tvmaze: state.sources.tvmaze,
+            jikan: state.sources.jikan,
+            anilist: state.sources.anilist
+        }
+    );
+
+}
+
+
+/* =========================================================
+   MOVIE FILTER
 ========================================================= */
 
 function getFilteredMovies() {
@@ -624,28 +2169,21 @@ function getFilteredMovies() {
 
         items =
             items.filter(
-                item => {
-
-                    const genres =
-                        Array.isArray(
-                            item.genres
-                        )
-                            ? item.genres
-                            : [];
-
-                    return genres.some(
-                        genre =>
-                            String(
-                                genre
-                            ).toLowerCase()
-                            .includes(
+                item =>
+                    getGenres(item)
+                        .some(
+                            genre =>
                                 String(
-                                    state.movieCategory
-                                ).toLowerCase()
-                            )
-                    );
-
-                }
+                                    genre
+                                )
+                                    .toLowerCase()
+                                    .includes(
+                                        String(
+                                            state.movieCategory
+                                        )
+                                            .toLowerCase()
+                                    )
+                        )
             );
 
     }
@@ -659,15 +2197,11 @@ function getFilteredMovies() {
 
             items.sort(
                 (a, b) =>
-                    (
-                        Number(
-                            b.rating
-                        ) || 0
+                    number(
+                        b.rating
                     ) -
-                    (
-                        Number(
-                            a.rating
-                        ) || 0
+                    number(
+                        a.rating
                     )
             );
 
@@ -679,10 +2213,12 @@ function getFilteredMovies() {
             items.sort(
                 (a, b) =>
                     String(
-                        b.releaseDate || ""
+                        b.releaseDate ||
+                        ""
                     ).localeCompare(
                         String(
-                            a.releaseDate || ""
+                            a.releaseDate ||
+                            ""
                         )
                     )
             );
@@ -690,23 +2226,12 @@ function getFilteredMovies() {
             break;
 
 
-        case "popular":
-
         default:
 
-            items.sort(
-                (a, b) =>
-                    (
-                        Number(
-                            b.popularity
-                        ) || 0
-                    ) -
-                    (
-                        Number(
-                            a.popularity
-                        ) || 0
-                    )
-            );
+            items =
+                sortPopular(
+                    items
+                );
 
             break;
 
@@ -737,12 +2262,11 @@ function renderMovies() {
         showEmpty(
             movieGrid,
             emptyState,
-            "لم نجد أفلاماً"
+            "لا توجد أفلام عربية حالياً"
         );
 
         if (loadMore) {
-            loadMore.hidden =
-                true;
+            loadMore.hidden = true;
         }
 
         return;
@@ -750,8 +2274,9 @@ function renderMovies() {
     }
 
 
-    emptyState.hidden =
-        true;
+    if (emptyState) {
+        emptyState.hidden = true;
+    }
 
 
     const visible =
@@ -763,9 +2288,7 @@ function renderMovies() {
 
     movieGrid.innerHTML =
         visible
-            .map(
-                createCard
-            )
+            .map(createCard)
             .join("");
 
 
@@ -801,33 +2324,20 @@ function renderSeries() {
 
         items.sort(
             (a, b) =>
-                (
-                    Number(
-                        b.rating
-                    ) || 0
+                number(
+                    b.rating
                 ) -
-                (
-                    Number(
-                        a.rating
-                    ) || 0
+                number(
+                    a.rating
                 )
         );
 
     } else {
 
-        items.sort(
-            (a, b) =>
-                (
-                    Number(
-                        b.rating
-                    ) || 0
-                ) -
-                (
-                    Number(
-                        a.rating
-                    ) || 0
-                )
-        );
+        items =
+            sortPopular(
+                items
+            );
 
     }
 
@@ -837,7 +2347,7 @@ function renderSeries() {
         showEmpty(
             seriesGrid,
             seriesEmptyState,
-            "لا توجد مسلسلات حالياً"
+            "لا توجد مسلسلات عربية حالياً"
         );
 
         return;
@@ -845,16 +2355,18 @@ function renderSeries() {
     }
 
 
-    seriesEmptyState.hidden =
-        true;
+    if (seriesEmptyState) {
+        seriesEmptyState.hidden = true;
+    }
 
 
     seriesGrid.innerHTML =
         items
-            .slice(0, 24)
-            .map(
-                createCard
+            .slice(
+                0,
+                CONFIG.SERIES_LIMIT
             )
+            .map(createCard)
             .join("");
 
 }
@@ -883,14 +2395,16 @@ function renderAnime() {
             items.filter(
                 item =>
                     String(
-                        item.status || ""
+                        item.status ||
+                        ""
                     )
                         .toLowerCase()
                         .includes(
                             "airing"
                         ) ||
                     String(
-                        item.status || ""
+                        item.status ||
+                        ""
                     )
                         .includes(
                             "يعرض"
@@ -902,15 +2416,11 @@ function renderAnime() {
 
     items.sort(
         (a, b) =>
-            (
-                Number(
-                    b.rating
-                ) || 0
+            number(
+                b.rating
             ) -
-            (
-                Number(
-                    a.rating
-                ) || 0
+            number(
+                a.rating
             )
     );
 
@@ -920,7 +2430,7 @@ function renderAnime() {
         showEmpty(
             animeGrid,
             animeEmptyState,
-            "لا يوجد أنمي حالياً"
+            "لا يوجد أنمي عربي البيانات حالياً"
         );
 
         return;
@@ -928,23 +2438,25 @@ function renderAnime() {
     }
 
 
-    animeEmptyState.hidden =
-        true;
+    if (animeEmptyState) {
+        animeEmptyState.hidden = true;
+    }
 
 
     animeGrid.innerHTML =
         items
-            .slice(0, 24)
-            .map(
-                createCard
+            .slice(
+                0,
+                CONFIG.ANIME_LIMIT
             )
+            .map(createCard)
             .join("");
 
 }
 
 
 /* =========================================================
-   RENDER POPULAR
+   POPULAR
 ========================================================= */
 
 function renderPopular() {
@@ -964,12 +2476,9 @@ function renderPopular() {
 
     }
 
-
     popularGrid.innerHTML =
         state.popular
-            .map(
-                createCard
-            )
+            .map(createCard)
             .join("");
 
 }
@@ -984,25 +2493,13 @@ function createCard(item) {
     const poster =
         getPoster(item);
 
-    const rating =
-        formatRating(
-            item.rating
-        );
-
-    const year =
-        getYear(item);
-
-    const type =
-        getTypeName(
-            item.type
-        );
-
     const genres =
         getGenres(item);
 
 
     const genresHtml =
         genres
+            .slice(0, 3)
             .map(
                 genre => `
                     <span class="card-genre">
@@ -1036,7 +2533,9 @@ function createCard(item) {
                                     item.title
                                 )}"
                                 loading="lazy"
-                                onerror="this.style.display='none'"
+                                onerror="
+                                    this.style.display='none'
+                                "
                             >
                         `
                         : `
@@ -1055,15 +2554,21 @@ function createCard(item) {
                         `
                 }
 
+
                 <span class="card-rating">
                     ★ ${escapeHtml(
-                        rating
+                        formatRating(
+                            item.rating
+                        )
                     )}
                 </span>
 
+
                 <span class="card-type">
                     ${escapeHtml(
-                        type
+                        getTypeName(
+                            item.type
+                        )
                     )}
                 </span>
 
@@ -1074,8 +2579,7 @@ function createCard(item) {
 
                 <h3 class="card-title">
                     ${escapeHtml(
-                        item.title ||
-                        "بدون عنوان"
+                        item.title
                     )}
                 </h3>
 
@@ -1084,9 +2588,10 @@ function createCard(item) {
 
                     <span>
                         ${escapeHtml(
-                            year
+                            getYear(item)
                         )}
                     </span>
+
 
                     ${
                         item.runtime
@@ -1099,6 +2604,7 @@ function createCard(item) {
                             `
                             : ""
                     }
+
 
                     ${
                         item.episodes
@@ -1148,28 +2654,42 @@ function showEmpty(
         grid.innerHTML = "";
     }
 
-    if (empty) {
+    if (!empty) {
+        return;
+    }
 
-        empty.hidden =
-            false;
+    empty.hidden = false;
 
-        const title =
-            empty.querySelector(
-                "h3"
-            );
+    const title =
+        empty.querySelector("h3");
 
-        if (title) {
-            title.textContent =
-                message;
-        }
-
+    if (title) {
+        title.textContent =
+            message;
     }
 
 }
 
 
 /* =========================================================
-   OPEN MODAL
+   FIND ITEM
+========================================================= */
+
+function findItemById(id) {
+
+    return state.all.find(
+        item =>
+            String(
+                item.id
+            ) ===
+            String(id)
+    );
+
+}
+
+
+/* =========================================================
+   MODAL
 ========================================================= */
 
 function openModal(item) {
@@ -1177,7 +2697,6 @@ function openModal(item) {
     if (!movieModal) {
         return;
     }
-
 
     state.currentItem =
         item;
@@ -1198,100 +2717,107 @@ function openModal(item) {
         );
 
 
-    const genres =
-        getGenres(item);
+    if (modalGenres) {
+
+        modalGenres.textContent =
+            getGenres(item)
+                .join(" • ");
+
+    }
 
 
-    modalGenres.textContent =
-        genres.join(
-            " • "
-        );
+    if (modalOverview) {
+
+        modalOverview.textContent =
+            item.overview ||
+            "لا يوجد وصف عربي متوفر.";
+
+    }
 
 
-    modalOverview.textContent =
-        item.overview ||
-        "لا يوجد وصف متوفر.";
+    if (modalMeta) {
 
+        modalMeta.innerHTML = `
 
-    modalMeta.innerHTML = `
-        <span class="meta-item">
-            <strong>التقييم</strong>
-            ${escapeHtml(
-                formatRating(
-                    item.rating
-                )
-            )}
-        </span>
+            <span class="meta-item">
+                <strong>التقييم</strong>
+                ${escapeHtml(
+                    formatRating(
+                        item.rating
+                    )
+                )}
+            </span>
 
-        <span class="meta-item">
-            <strong>السنة</strong>
-            ${escapeHtml(
-                getYear(item)
-            )}
-        </span>
+            <span class="meta-item">
+                <strong>السنة</strong>
+                ${escapeHtml(
+                    getYear(item)
+                )}
+            </span>
 
-        ${
-            item.imdbRating
-                ? `
-                    <span class="meta-item">
-                        <strong>IMDb</strong>
-                        ${escapeHtml(
-                            formatRating(
-                                item.imdbRating
-                            )
-                        )}
-                    </span>
-                `
-                : ""
-        }
+            ${
+                item.imdbRating
+                    ? `
+                        <span class="meta-item">
+                            <strong>IMDb</strong>
+                            ${escapeHtml(
+                                formatRating(
+                                    item.imdbRating
+                                )
+                            )}
+                        </span>
+                    `
+                    : ""
+            }
 
-        ${
-            item.runtime
-                ? `
-                    <span class="meta-item">
-                        <strong>المدة</strong>
-                        ${escapeHtml(
-                            item.runtime
-                        )}
-                    </span>
-                `
-                : ""
-        }
+            ${
+                item.runtime
+                    ? `
+                        <span class="meta-item">
+                            <strong>المدة</strong>
+                            ${escapeHtml(
+                                item.runtime
+                            )}
+                        </span>
+                    `
+                    : ""
+            }
 
-        ${
-            item.episodes
-                ? `
-                    <span class="meta-item">
-                        <strong>الحلقات</strong>
-                        ${escapeHtml(
-                            item.episodes
-                        )}
-                    </span>
-                `
-                : ""
-        }
+            ${
+                item.episodes
+                    ? `
+                        <span class="meta-item">
+                            <strong>الحلقات</strong>
+                            ${escapeHtml(
+                                item.episodes
+                            )}
+                        </span>
+                    `
+                    : ""
+            }
 
-        ${
-            item.status
-                ? `
-                    <span class="meta-item">
-                        <strong>الحالة</strong>
-                        ${escapeHtml(
-                            item.status
-                        )}
-                    </span>
-                `
-                : ""
-        }
-    `;
+            ${
+                item.status
+                    ? `
+                        <span class="meta-item">
+                            <strong>الحالة</strong>
+                            ${escapeHtml(
+                                item.status
+                            )}
+                        </span>
+                    `
+                    : ""
+            }
+
+        `;
+
+    }
 
 
     const extras = [];
 
 
-    if (
-        item.director
-    ) {
+    if (item.director) {
 
         extras.push(
             `المخرج: ${item.director}`
@@ -1300,9 +2826,16 @@ function openModal(item) {
     }
 
 
-    if (
-        item.network
-    ) {
+    if (item.writer) {
+
+        extras.push(
+            `الكاتب: ${item.writer}`
+        );
+
+    }
+
+
+    if (item.network) {
 
         extras.push(
             `الشبكة: ${item.network}`
@@ -1311,37 +2844,23 @@ function openModal(item) {
     }
 
 
-    if (
-        item.production
-    ) {
+    if (item.production) {
 
-        if (
+        const production =
             Array.isArray(
                 item.production
             )
-        ) {
+                ? item.production.join("، ")
+                : item.production;
 
-            extras.push(
-                `الاستوديو: ${
-                    item.production
-                        .join("، ")
-                }`
-            );
-
-        } else {
-
-            extras.push(
-                `الإنتاج: ${item.production}`
-            );
-
-        }
+        extras.push(
+            `الإنتاج: ${production}`
+        );
 
     }
 
 
-    if (
-        item.country
-    ) {
+    if (item.country) {
 
         extras.push(
             `الدولة: ${item.country}`
@@ -1350,87 +2869,99 @@ function openModal(item) {
     }
 
 
-    modalExtra.innerHTML =
-        extras
-            .map(
-                text =>
-                    `<span>${escapeHtml(
-                        text
-                    )}</span>`
-            )
-            .join(" • ");
+    if (modalExtra) {
 
-
-    if (poster) {
-
-        modalPoster.innerHTML = `
-            <img
-                src="${escapeHtml(
-                    poster
-                )}"
-                alt="${escapeHtml(
-                    item.title
-                )}"
-            >
-        `;
-
-    } else {
-
-        modalPoster.innerHTML = `
-            <div
-                style="
-                    width:100%;
-                    height:100%;
-                    display:grid;
-                    place-items:center;
-                    color:#d6a84f;
-                    font-size:40px;
-                "
-            >
-                IE
-            </div>
-        `;
+        modalExtra.innerHTML =
+            extras
+                .map(
+                    text =>
+                        `<span>${escapeHtml(
+                            text
+                        )}</span>`
+                )
+                .join(" • ");
 
     }
 
 
-    if (
-        item.backdrop
-    ) {
+    if (modalPoster) {
 
-        modalBackdrop.style.background =
-            `
-                linear-gradient(
-                    90deg,
-                    #090909 20%,
-                    rgba(9,9,9,0.78),
-                    rgba(9,9,9,0.42)
-                ),
-                url("${item.backdrop}")
-                center / cover
-                no-repeat
+        if (poster) {
+
+            modalPoster.innerHTML = `
+                <img
+                    src="${escapeHtml(
+                        poster
+                    )}"
+                    alt="${escapeHtml(
+                        item.title
+                    )}"
+                >
             `;
 
-    } else {
+        } else {
 
-        modalBackdrop.style.background =
-            `
-                radial-gradient(
-                    circle at 70% 30%,
-                    rgba(143,16,32,0.35),
-                    transparent 40%
-                ),
-                #090909
+            modalPoster.innerHTML = `
+                <div
+                    style="
+                        width:100%;
+                        height:100%;
+                        display:grid;
+                        place-items:center;
+                        color:#d6a84f;
+                        font-size:40px;
+                    "
+                >
+                    IE
+                </div>
             `;
+
+        }
+
+    }
+
+
+    if (modalBackdrop) {
+
+        const backdrop =
+            getBackdrop(item);
+
+
+        if (backdrop) {
+
+            modalBackdrop.style.background =
+                `
+                    linear-gradient(
+                        90deg,
+                        #090909 15%,
+                        rgba(9,9,9,.75),
+                        rgba(9,9,9,.35)
+                    ),
+                    url("${backdrop}")
+                    center / cover
+                    no-repeat
+                `;
+
+        } else {
+
+            modalBackdrop.style.background =
+                `
+                    radial-gradient(
+                        circle at 70% 30%,
+                        rgba(143,16,32,.35),
+                        transparent 40%
+                    ),
+                    #090909
+                `;
+
+        }
 
     }
 
 
     if (modalWatch) {
 
-        if (
-            item.trailer
-        ) {
+        if (item.trailer) {
 
             modalWatch.textContent =
                 "عرض المقطع";
@@ -1438,9 +2969,7 @@ function openModal(item) {
             modalWatch.disabled =
                 false;
 
-        } else if (
-            item.sourceUrl
-        ) {
+        } else if (item.sourceUrl) {
 
             modalWatch.textContent =
                 "المصدر";
@@ -1448,9 +2977,7 @@ function openModal(item) {
             modalWatch.disabled =
                 false;
 
-        } else if (
-            item.imdbId
-        ) {
+        } else if (item.imdbId) {
 
             modalWatch.textContent =
                 "IMDb";
@@ -1471,8 +2998,7 @@ function openModal(item) {
     }
 
 
-    movieModal.hidden =
-        false;
+    movieModal.hidden = false;
 
     document.body.style.overflow =
         "hidden";
@@ -1490,14 +3016,11 @@ function closeModal() {
         return;
     }
 
-    movieModal.hidden =
-        true;
+    movieModal.hidden = true;
 
-    document.body.style.overflow =
-        "";
+    document.body.style.overflow = "";
 
-    state.currentItem =
-        null;
+    state.currentItem = null;
 
 }
 
@@ -1518,62 +3041,126 @@ async function performSearch(
 
     if (!text) {
 
-        searchResults.innerHTML =
-            "";
+        if (searchResults) {
+            searchResults.innerHTML =
+                "";
+        }
 
         return;
 
     }
 
 
-    searchResults.innerHTML = `
-        <div class="search-empty">
-            جاري البحث...
-        </div>
-    `;
+    if (searchResults) {
+
+        searchResults.innerHTML = `
+            <div class="search-empty">
+                جاري البحث...
+            </div>
+        `;
+
+    }
 
 
     try {
 
-        let items;
+        let items = [];
+
+
+        /*
+         * نبحث أولاً في المكتبة المدمجة
+         * لأن هذا يمنع إعادة تحميل المصادر
+         * في كل حرف يكتبه المستخدم.
+         */
+
+        const normalizedQuery =
+            normalizeTitle(
+                text
+            );
+
+
+        items =
+            state.all.filter(
+                item => {
+
+                    const fields = [
+
+                        item.title,
+
+                        item.originalTitle,
+
+                        item.englishTitle,
+
+                        item.overview
+
+                    ]
+                        .filter(Boolean)
+                        .map(
+                            value =>
+                                normalizeTitle(
+                                    value
+                                )
+                        );
+
+
+                    return fields.some(
+                        value =>
+                            value.includes(
+                                normalizedQuery
+                            )
+                    );
+
+                }
+            );
+
+
+        /*
+         * إذا لم نجد نتيجة محلية
+         * نحاول API الموقع.
+         */
+
+        if (!items.length) {
+
+            const type =
+                state.searchType ===
+                "all"
+                    ? ""
+                    : `&type=${encodeURIComponent(
+                        state.searchType
+                    )}`;
+
+
+            const data =
+                await fetchJSON(
+                    `${API_BASE}/movies?search=${encodeURIComponent(
+                        text
+                    )}&sort=popular${type}`
+                );
+
+
+            items =
+                Array.isArray(
+                    data.movies
+                )
+                    ? deduplicateItems(
+                        data.movies
+                    )
+                    : [];
+
+        }
 
 
         if (
-            state.searchType ===
+            state.searchType !==
             "all"
         ) {
 
-            const data =
-                await apiFetch(
-                    `/movies?search=${encodeURIComponent(
-                        text
-                    )}&sort=popular`
-                );
-
             items =
-                Array.isArray(
-                    data.movies
-                )
-                    ? data.movies
-                    : [];
-
-        } else {
-
-            const data =
-                await apiFetch(
-                    `/movies?search=${encodeURIComponent(
-                        text
-                    )}&type=${encodeURIComponent(
+                items.filter(
+                    item =>
+                        item.type ===
                         state.searchType
-                    )}&sort=popular`
                 );
-
-            items =
-                Array.isArray(
-                    data.movies
-                )
-                    ? data.movies
-                    : [];
 
         }
 
@@ -1581,9 +3168,10 @@ async function performSearch(
         renderSearchResults(
             items.slice(
                 0,
-                20
+                CONFIG.SEARCH_LIMIT
             )
         );
+
 
     } catch (error) {
 
@@ -1592,28 +3180,39 @@ async function performSearch(
             error
         );
 
-        searchResults.innerHTML = `
-            <div class="search-empty">
-                تعذر تنفيذ البحث حالياً.
-            </div>
-        `;
+        if (searchResults) {
+
+            searchResults.innerHTML = `
+                <div class="search-empty">
+                    تعذر تنفيذ البحث حالياً.
+                </div>
+            `;
+
+        }
 
     }
 
 }
 
 
+/* =========================================================
+   SEARCH RESULTS
+========================================================= */
+
 function renderSearchResults(
     items
 ) {
 
-    if (
-        !items.length
-    ) {
+    if (!searchResults) {
+        return;
+    }
+
+
+    if (!items.length) {
 
         searchResults.innerHTML = `
             <div class="search-empty">
-                لم نجد نتائج مطابقة.
+                لم نجد نتيجة عربية مطابقة.
             </div>
         `;
 
@@ -1676,6 +3275,7 @@ function renderSearchResults(
                                     )}
                                 </div>
 
+
                                 <div class="search-result-meta">
 
                                     ${escapeHtml(
@@ -1687,9 +3287,7 @@ function renderSearchResults(
                                     •
 
                                     ${escapeHtml(
-                                        getYear(
-                                            item
-                                        )
+                                        getYear(item)
                                     )}
 
                                     •
@@ -1715,54 +3313,36 @@ function renderSearchResults(
 
 
 /* =========================================================
-   FIND ITEM
-========================================================= */
-
-function findItemById(
-    id
-) {
-
-    return state.all.find(
-        item =>
-            String(
-                item.id
-            ) ===
-            String(id)
-    );
-
-}
-
-
-/* =========================================================
    NAVIGATION
 ========================================================= */
 
 function setupNavigation() {
 
-    $$(".nav-link").forEach(
-        link => {
+    $$(".nav-link")
+        .forEach(
+            link => {
 
-            link.addEventListener(
-                "click",
-                () => {
+                link.addEventListener(
+                    "click",
+                    () => {
 
-                    $$(".nav-link")
-                        .forEach(
-                            item =>
-                                item.classList.remove(
-                                    "active"
-                                )
+                        $$(".nav-link")
+                            .forEach(
+                                item =>
+                                    item.classList.remove(
+                                        "active"
+                                    )
+                            );
+
+                        link.classList.add(
+                            "active"
                         );
 
-                    link.classList.add(
-                        "active"
-                    );
+                    }
+                );
 
-                }
-            );
-
-        }
-    );
+            }
+        );
 
 
     const sections =
@@ -1783,6 +3363,13 @@ function setupNavigation() {
             .filter(Boolean);
 
 
+    if (
+        !("IntersectionObserver" in window)
+    ) {
+        return;
+    }
+
+
     const observer =
         new IntersectionObserver(
             entries => {
@@ -1798,6 +3385,7 @@ function setupNavigation() {
 
                         const id =
                             entry.target.id;
+
 
                         $$(".nav-link")
                             .forEach(
@@ -1835,7 +3423,7 @@ function setupNavigation() {
 
 
 /* =========================================================
-   MOVIE FILTER EVENTS
+   MOVIE FILTERS
 ========================================================= */
 
 function setupMovieFilters() {
@@ -1867,7 +3455,7 @@ function setupMovieFilters() {
 
 
                         state.movieLimit =
-                            24;
+                            CONFIG.MOVIE_LIMIT;
 
 
                         renderMovies();
@@ -1893,7 +3481,7 @@ function setupMovieFilters() {
                     select.value;
 
                 state.movieLimit =
-                    24;
+                    CONFIG.MOVIE_LIMIT;
 
                 renderMovies();
 
@@ -1910,7 +3498,7 @@ function setupMovieFilters() {
             () => {
 
                 state.movieLimit +=
-                    24;
+                    CONFIG.MOVIE_LIMIT;
 
                 renderMovies();
 
@@ -2009,7 +3597,7 @@ function setupAnimeFilters() {
 
 
 /* =========================================================
-   CATEGORY CARDS
+   CATEGORIES
 ========================================================= */
 
 function setupCategories() {
@@ -2025,6 +3613,7 @@ function setupCategories() {
                         const category =
                             button.dataset.category;
 
+
                         if (!category) {
                             return;
                         }
@@ -2035,7 +3624,7 @@ function setupCategories() {
 
 
                         state.movieLimit =
-                            24;
+                            CONFIG.MOVIE_LIMIT;
 
 
                         $$("#movieFilters .filter")
@@ -2056,14 +3645,7 @@ function setupCategories() {
                             "movies";
 
 
-                        setTimeout(
-                            () => {
-
-                                renderMovies();
-
-                            },
-                            100
-                        );
+                        renderMovies();
 
                     }
                 );
@@ -2102,9 +3684,11 @@ function setupCardEvents() {
 
 
             if (item) {
+
                 openModal(
                     item
                 );
+
             }
 
         }
@@ -2149,7 +3733,7 @@ function setupCardEvents() {
 
 
 /* =========================================================
-   SEARCH EVENTS
+   SEARCH OPEN
 ========================================================= */
 
 function openSearch() {
@@ -2158,11 +3742,11 @@ function openSearch() {
         return;
     }
 
-    searchOverlay.hidden =
-        false;
+    searchOverlay.hidden = false;
 
     document.body.style.overflow =
         "hidden";
+
 
     setTimeout(
         () => {
@@ -2178,20 +3762,26 @@ function openSearch() {
 }
 
 
+/* =========================================================
+   SEARCH CLOSE
+========================================================= */
+
 function closeSearch() {
 
     if (!searchOverlay) {
         return;
     }
 
-    searchOverlay.hidden =
-        true;
+    searchOverlay.hidden = true;
 
-    document.body.style.overflow =
-        "";
+    document.body.style.overflow = "";
 
 }
 
+
+/* =========================================================
+   SEARCH EVENTS
+========================================================= */
 
 function setupSearch() {
 
@@ -2266,6 +3856,7 @@ function setupSearch() {
                     state.searchTimer
                 );
 
+
                 state.searchTimer =
                     setTimeout(
                         () =>
@@ -2296,6 +3887,7 @@ function setupSearch() {
                                         "active"
                                     )
                             );
+
 
                         button.classList.add(
                             "active"
@@ -2390,18 +3982,16 @@ function setupModal() {
                 const item =
                     state.currentItem;
 
+
                 if (!item) {
                     return;
                 }
 
 
-                let url =
-                    null;
+                let url = null;
 
 
-                if (
-                    item.trailer
-                ) {
+                if (item.trailer) {
 
                     url =
                         item.trailer;
@@ -2450,7 +4040,7 @@ function setupModal() {
 
 
 /* =========================================================
-   ESC KEY
+   KEYBOARD
 ========================================================= */
 
 function setupKeyboard() {
@@ -2493,10 +4083,25 @@ function setupKeyboard() {
 
 
 /* =========================================================
+   PAGE TITLE
+========================================================= */
+
+function setupBranding() {
+
+    document.title =
+        "IRAQ EMPIRE CINEMA | عراق إمباير سينما";
+
+}
+
+
+/* =========================================================
    INIT
 ========================================================= */
 
 async function init() {
+
+    setupBranding();
+
 
     setLoading(
         popularGrid,
@@ -2538,9 +4143,17 @@ async function init() {
     setupKeyboard();
 
 
-    await Promise.all([
+    /*
+     * نحمل حالة API بالتوازي
+     * مع المصادر الخارجية.
+     */
+
+    await Promise.allSettled([
+
         loadStatus(),
+
         loadAll()
+
     ]);
 
 
@@ -2551,7 +4164,25 @@ async function init() {
 }
 
 
-document.addEventListener(
-    "DOMContentLoaded",
-    init
-);
+/* =========================================================
+   START
+========================================================= */
+
+if (
+    document.readyState ===
+    "loading"
+) {
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        init,
+        {
+            once: true
+        }
+    );
+
+} else {
+
+    init();
+
+}
