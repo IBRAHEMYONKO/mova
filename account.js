@@ -184,10 +184,6 @@
                 console.warn("SUPABASE STATUS:", error.message);
             }
 
-            if (!state.discordReady && !oauthError) {
-                setStatus("Supabase متصل، لكن Discord OAuth غير مفعّل بعد.", "info");
-            }
-
             const { data, error } = await state.client.auth.getUser();
             if (error && !/Auth session missing/i.test(error.message || "")) {
                 throw error;
@@ -196,7 +192,7 @@
             if (data?.user) {
                 renderUser(data.user);
                 await loadProfile(data.user);
-                if (!data.user) setStatus("تم تسجيل الدخول بنجاح.", "success");
+                if (!state.profile?.is_banned) setStatus("تم تسجيل الدخول بنجاح.", "success");
             } else if (!oauthError) {
                 renderLoggedOut();
                 setStatus(
