@@ -8,7 +8,14 @@ module.exports = (req, res) => {
     try {
         const file = path.join(process.cwd(), "index.html");
         const html = fs.readFileSync(file, "utf8");
-        const output = injectNavigationScript(html);
+        let output = injectNavigationScript(html);
+        const script = '<script src="cinema-unified-search.js"></script>';
+        if (!output.includes(script)) {
+            const marker = /<\/body\s*>/i;
+            output = marker.test(output)
+                ? output.replace(marker, `    ${script}\n\n</body>`)
+                : `${output}\n${script}\n`;
+        }
 
         res.setHeader("Content-Type", "text/html; charset=utf-8");
         res.setHeader("Cache-Control", "public, max-age=60, s-maxage=300, stale-while-revalidate=86400");
