@@ -7,6 +7,7 @@ const { normalizeWatchItem } = require("../lib/watch-model");
 const { loadStoredWatchItem } = require("../lib/watch-storage");
 const { attachSourcesToSeasons, attachItemSources } = require("../lib/watch-response");
 const { getWatchAvailability } = require("../lib/watch-availability");
+const { getAniListMediaById } = require("../lib/anilist-media");
 
 function findItem(catalog, id) {
     const wanted = String(id || "").trim();
@@ -14,8 +15,32 @@ function findItem(catalog, id) {
 
     return catalog.all.find(item =>
         String(item.id) === wanted ||
-        String(item.tmdbId || "") === wanted
+        String(item.tmdbId || "") === wanted ||
+        String(item.anilistId || "") === wanted
     ) || null;
+}
+
+function parseAniListId(id) {
+    const match = String(id || "").match(/^anilist-(?:anime|manga)-(\d+)$/i);
+    return match ? Number(match[1]) : 0;
+}
+
+function mergeProviderLinks(item) {
+    const links = Array.isArray(item?.externalLinks) ? item.externalLinks : [];
+    const sources = links.map(link => ({
+        id: `external-${link.id || link.name}`,
+        name: link.name || "الموقع الرسمي",
+        kind: "provider",
+        url: link.url,
+        embed: false,
+        official: true,
+        language: link.language || "",
+        subtitle: "",
+        quality: "",
+        priority: 50
+    }));
+
+    return sources;
 }
 
 module.exports = async function handler(req, res) {
@@ -32,17 +57,28 @@ module.exports = async function handler(req, res) {
         }
 
         const catalog = await getCatalog(false);
-        const item = findItem(catalog, id);
+        let item = findItem(catalog, id);
+
+        if (!item) {
+            const anilistId = parseAniListId(id);
+            if (anilistId) {
+                item = await getAniListMediaById(anilistId, id.includes("manga") ? "manga" : "anime");
+            }
+        }
 
         if (!item) {
             return res.status(404).json({ success: false, error: "المحتوى غير موجود." });
         }
 
-        const stored = loadStoredWatchItem(item.id);
+        const stored = loadStoredWatchItem(item.id) || {};
         let seasons = Array.isArray(item.seasons) ? item.seasons : [];
 
         if ((item.type === "series" || item.type === "tv") && item.tmdbId) {
-            seasons = await getSeriesEpisodes(item.tmdbId);
+            try {
+                seasons = await getSeriesEpisodes(item.tmdbId);
+            } catch {
+                seasons = [];
+            }
         }
 
         seasons = attachSourcesToSeasons(seasons, stored.seasons);
@@ -56,16 +92,30 @@ module.exports = async function handler(req, res) {
             }
         }
 
+        const anilistProviderSources = mergeProviderLinks(item);
+        const storedItem = {
+            ...stored,
+            sources: [
+                ...(Array.isArray(stored.sources) ? stored.sources : []),
+                ...anilistProviderSources
+            ]
+        };
+
         let normalized = normalizeWatchItem({
             ...item,
             seasons,
             chapters: stored.chapters || item.chapters || []
         });
 
-        normalized = attachItemSources(normalized, stored);
+        normalized = attachItemSources(normalized, storedItem);
 
         const episodeCount = normalized.seasons.reduce(
             (total, season) => total + season.episodes.length,
+            0
+        );
+
+        const playableEpisodeCount = normalized.seasons.reduce(
+            (total, season) => total + season.episodes.filter(episode => episode.playable).length,
             0
         );
 
@@ -82,9 +132,14 @@ module.exports = async function handler(req, res) {
             },
             providers,
             meta: {
+                mediaType: normalized.type,
+                format: normalized.format || "",
                 seasonCount: normalized.seasons.length,
                 episodeCount,
-                chapterCount: normalized.chapters.length,
+                playableEpisodeCount,
+                chapterCount: Number(normalized.chapters?.length || 0),
+                chapterTotal: Number(item.chapters || 0),
+                volumeCount: Number(item.volumes || 0),
                 ...availability
             }
         });
