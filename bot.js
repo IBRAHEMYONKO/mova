@@ -3,19 +3,21 @@
 const express = require("express");
 const fs = require("fs");
 const path = require("path");
-const {
-    Client,
-    GatewayIntentBits,
-    PermissionFlagsBits
-} = require("discord.js");
 
 const config = require("./config.json");
 
-const PORT = Number(process.env.PORT || config.port || 3000);
+const PORT = Number(
+    process.env.PORT ||
+    config.port ||
+    3000
+);
 
 const ROOT = __dirname;
 const DATA_DIR = path.join(ROOT, "data");
-const CACHE_FILE = path.join(DATA_DIR, "movies.json");
+const CACHE_FILE = path.join(
+    DATA_DIR,
+    "movies.json"
+);
 
 const CACHE_TTL =
     Number(config.cacheHours || 6) *
@@ -23,7 +25,9 @@ const CACHE_TTL =
     60 *
     1000;
 
-fs.mkdirSync(DATA_DIR, { recursive: true });
+fs.mkdirSync(DATA_DIR, {
+    recursive: true
+});
 
 const app = express();
 
@@ -34,18 +38,6 @@ app.use(
         limit: "32kb"
     })
 );
-
-/* =========================================================
-   DISCORD
-========================================================= */
-
-const client = new Client({
-    intents: [
-        GatewayIntentBits.Guilds,
-        GatewayIntentBits.GuildMessages,
-        GatewayIntentBits.MessageContent
-    ]
-});
 
 /* =========================================================
    التصنيفات
@@ -101,7 +93,10 @@ function loadCache() {
         }
 
         const raw = JSON.parse(
-            fs.readFileSync(CACHE_FILE, "utf8")
+            fs.readFileSync(
+                CACHE_FILE,
+                "utf8"
+            )
         );
 
         if (
@@ -112,6 +107,7 @@ function loadCache() {
         }
 
         return raw;
+
     } catch {
         return createEmptyStore();
     }
@@ -120,7 +116,11 @@ function loadCache() {
 function saveCache() {
     fs.writeFileSync(
         CACHE_FILE,
-        JSON.stringify(movieStore, null, 2),
+        JSON.stringify(
+            movieStore,
+            null,
+            2
+        ),
         "utf8"
     );
 }
@@ -147,6 +147,7 @@ function hasOMDb() {
 ========================================================= */
 
 function tmdbHeaders() {
+
     if (!config.tmdbAccessToken) {
         return {};
     }
@@ -157,7 +158,10 @@ function tmdbHeaders() {
     };
 }
 
-async function tmdb(endpoint, params = {}) {
+async function tmdb(
+    endpoint,
+    params = {}
+) {
 
     if (!hasTMDB()) {
         throw new Error(
@@ -173,11 +177,13 @@ async function tmdb(endpoint, params = {}) {
         const [key, value]
         of Object.entries(params)
     ) {
+
         if (
             value !== undefined &&
             value !== null &&
             value !== ""
         ) {
+
             url.searchParams.set(
                 key,
                 String(value)
@@ -189,6 +195,7 @@ async function tmdb(endpoint, params = {}) {
         !config.tmdbAccessToken &&
         config.tmdbApiKey
     ) {
+
         url.searchParams.set(
             "api_key",
             config.tmdbApiKey
@@ -203,6 +210,7 @@ async function tmdb(endpoint, params = {}) {
     );
 
     if (!response.ok) {
+
         throw new Error(
             `TMDB ${response.status}`
         );
@@ -215,7 +223,9 @@ async function tmdb(endpoint, params = {}) {
    OMDb
 ========================================================= */
 
-async function omdb(params = {}) {
+async function omdb(
+    params = {}
+) {
 
     if (!hasOMDb()) {
         throw new Error(
@@ -236,11 +246,13 @@ async function omdb(params = {}) {
         const [key, value]
         of Object.entries(params)
     ) {
+
         if (
             value !== undefined &&
             value !== null &&
             value !== ""
         ) {
+
             url.searchParams.set(
                 key,
                 String(value)
@@ -248,9 +260,11 @@ async function omdb(params = {}) {
         }
     }
 
-    const response = await fetch(url);
+    const response =
+        await fetch(url);
 
     if (!response.ok) {
+
         throw new Error(
             `OMDb HTTP ${response.status}`
         );
@@ -262,6 +276,7 @@ async function omdb(params = {}) {
     if (
         data.Response === "False"
     ) {
+
         throw new Error(
             data.Error ||
             "OMDb request failed"
@@ -296,7 +311,8 @@ function normalizeTMDB(movie) {
             movie.id,
 
         imdbId:
-            movie.imdb_id || null,
+            movie.imdb_id ||
+            null,
 
         source:
             "TMDB",
@@ -510,6 +526,7 @@ function uniqueMovies(movies) {
         if (
             !map.has(key)
         ) {
+
             map.set(
                 key,
                 movie
@@ -889,8 +906,10 @@ app.use(
             "/config.json",
             "/package.json",
             "/package-lock.json",
+            "/server.js",
             "/bot.js",
             "/data/movies.json"
+
         ];
 
         if (
@@ -898,6 +917,7 @@ app.use(
                 req.path
             )
         ) {
+
             return res
                 .status(403)
                 .send(
@@ -1139,6 +1159,10 @@ const server =
             );
 
             console.log(
+                "DISCORD → DISABLED"
+            );
+
+            console.log(
                 "========================================"
             );
 
@@ -1156,159 +1180,6 @@ server.on(
         );
     }
 );
-
-/* =========================================================
-   Discord جاهز
-========================================================= */
-
-client.once(
-    "clientReady",
-    () => {
-
-        console.log(
-            `CINEMA BOT ONLINE → ${client.user.tag}`
-        );
-    }
-);
-
-client.on(
-    "messageCreate",
-    async message => {
-
-        if (
-            message.author.bot ||
-            !message.guild
-        ) {
-            return;
-        }
-
-        const content =
-            message.content.trim();
-
-        if (
-            !content.startsWith(
-                "!سينما"
-            )
-        ) {
-            return;
-        }
-
-        if (
-            !message.member.permissions.has(
-                PermissionFlagsBits.ManageGuild
-            )
-        ) {
-
-            return message.reply(
-                "❌ هذا الأمر للإدارة فقط."
-            );
-        }
-
-        const args =
-            content.split(
-                /\s+/
-            );
-
-        const action =
-            args[1] ||
-            "حالة";
-
-        if (
-            action === "تحديث"
-        ) {
-
-            await message.reply(
-                "⏳ جاري تحديث مكتبة الأفلام..."
-            );
-
-            try {
-
-                const store =
-                    await syncMovies();
-
-                await message.channel.send(
-                    `✅ تم تحديث المكتبة. عدد الأفلام: **${store.movies.length}**`
-                );
-
-            } catch (error) {
-
-                await message.channel.send(
-                    `❌ فشل التحديث: ${error.message}`
-                );
-            }
-
-            return;
-        }
-
-        await message.reply(
-
-            `🎬 **IRAQ EMPIRE CINEMA**\n` +
-
-            `الأفلام: **${movieStore.movies.length}**\n` +
-
-            `آخر تحديث: **${
-                movieStore.updatedAt
-                    ? new Date(
-                        movieStore.updatedAt
-                    ).toLocaleString(
-                        "ar-IQ"
-                    )
-                    : "لم يحدث بعد"
-            }**`
-        );
-    }
-);
-
-/* =========================================================
-   Discord Errors
-========================================================= */
-
-client.on(
-    "error",
-    error => {
-
-        console.error(
-            "DISCORD ERROR →",
-            error.message
-        );
-    }
-);
-
-/* =========================================================
-   تسجيل البوت
-========================================================= */
-
-async function startBot() {
-
-    if (
-        !config.token ||
-        config.token ===
-            "ضع_توكن_البوت_هنا"
-    ) {
-
-        console.warn(
-            "DISCORD TOKEN غير موجود؛ الموقع سيعمل بدون تسجيل البوت."
-        );
-
-        return;
-    }
-
-    try {
-
-        await client.login(
-            config.token
-        );
-
-    } catch (error) {
-
-        console.error(
-            "BOT LOGIN ERROR →",
-            error.message
-        );
-    }
-}
-
-startBot();
 
 /* =========================================================
    تحديث دوري
