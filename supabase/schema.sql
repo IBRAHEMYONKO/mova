@@ -36,8 +36,7 @@ create table if not exists public.watch_progress (
     position_seconds numeric not null default 0 check (position_seconds >= 0),
     duration_seconds numeric not null default 0 check (duration_seconds >= 0),
     completed boolean not null default false,
-    updated_at timestamptz not null default now(),
-    unique (user_id, item_id, season_number, episode_number, chapter_number)
+    updated_at timestamptz not null default now()
 );
 
 create table if not exists public.comments (
@@ -91,6 +90,18 @@ create index if not exists comments_parent_idx on public.comments(parent_id);
 create index if not exists reactions_comment_idx on public.comment_reactions(comment_id);
 create index if not exists reports_status_idx on public.reports(status, created_at desc);
 
+-- PostgreSQL UNIQUE treats NULLs as distinct. These indexes make the watch-progress
+-- dimensions truly unique for a user/item, including movie-level and chapter-level rows.
+drop index if exists public.watch_progress_unique_dimensions;
+create unique index watch_progress_unique_dimensions
+on public.watch_progress (
+    user_id,
+    item_id,
+    coalesce(season_number, 0),
+    coalesce(episode_number, 0),
+    coalesce(chapter_number, 0)
+);
+
 alter table public.profiles enable row level security;
 alter table public.favorites enable row level security;
 alter table public.watch_progress enable row level security;
@@ -108,6 +119,30 @@ for insert with check (auth.uid() = id);
 
 create policy "users update own profile" on public.profiles
 for update using (auth.uid() = id) with check (auth.uid() = id);
+
+-- Security fields are server-controlled. A normal authenticated client cannot
+-- promote itself to moderator or remove its own ban through profile updates.
+create or replace function public.protect_profile_security_fields()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+    if auth.uid() is not null then
+        new.is_moderator := old.is_moderator;
+        new.is_banned := old.is_banned;
+    end if;
+
+    new.updated_at := now();
+    return new;
+end;
+$$;
+
+drop trigger if exists protect_profile_security_fields_trigger on public.profiles;
+create trigger protect_profile_security_fields_trigger
+before update on public.profiles
+for each row execute function public.protect_profile_security_fields();
 
 -- Favorites
 create policy "users read own favorites" on public.favorites
@@ -132,7 +167,8 @@ for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
 create policy "users delete own progress" on public.watch_progress
 for delete using (auth.uid() = user_id);
 
--- Comments: visible comments can be read publicly; hidden comments are moderator-only later.
+-- Comments: visible comments can be read publicly; hidden comments remain visible
+-- to their author so they can understand that moderation affected their post.
 create policy "comments readable" on public.comments
 for select using (is_hidden = false or auth.uid() = user_id);
 
