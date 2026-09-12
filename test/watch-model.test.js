@@ -38,6 +38,7 @@ test("watch item exposes only seasons that contain real episodes", () => {
 test("watch sources are required before a watch action is considered available", () => {
     assert.equal(hasWatchSources({ sources: [] }), false);
     assert.equal(hasWatchSources({ sources: [{ name: "Trailer", url: "https://example.com", kind: "external" }] }), true);
+    assert.equal(hasWatchSources({ sources: [{ name: "Official provider", url: "https://example.com", kind: "provider" }] }), false);
     assert.equal(hasWatchSources({ sources: [{ name: "Broken", url: "" }] }), false);
 });
 
@@ -61,6 +62,33 @@ test("visible seasons never invent missing episodes", () => {
     assert.equal(seasons[0].number, 2);
     assert.equal(seasons[0].episodes.length, 1);
     assert.equal(seasons[0].episodes[0].number, 3);
+});
+
+test("provider-only episodes remain visible without becoming playable", () => {
+    const seasons = visibleSeasons([
+        {
+            number: 1,
+            episodes: [
+                {
+                    number: 1,
+                    title: "Official episode",
+                    sources: [{
+                        name: "Official provider",
+                        url: "https://example.com/e1",
+                        kind: "provider",
+                        official: true
+                    }]
+                }
+            ]
+        }
+    ]);
+
+    assert.equal(seasons.length, 1);
+    assert.equal(seasons[0].episodeCount, 1);
+    assert.equal(seasons[0].playableEpisodeCount, 0);
+    assert.equal(seasons[0].providerEpisodeCount, 1);
+    assert.equal(seasons[0].episodes[0].playable, false);
+    assert.equal(seasons[0].episodes[0].providerCount, 1);
 });
 
 test("chapter normalization keeps only real chapters", () => {
@@ -91,7 +119,10 @@ test("chapter normalization keeps only real chapters", () => {
                         quality: "",
                         priority: 0
                     }
-                ]
+                ],
+                playable: true,
+                sourceCount: 1,
+                providerCount: 0
             }
         ]
     );
