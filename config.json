@@ -1,13 +1,10 @@
 {
     "port": 3000,
 
-    "tmdbAccessToken": "ضع_TMDb_API_Read_Access_Token_هنا",
-
+    "tmdbAccessToken": "ضع_توكن_TMDb_هنا",
     "tmdbApiKey": "",
 
-    "omdbApiKey": "http://www.omdbapi.com/?i=tt3896198&apikey=f15f4a98",
-
-    "omdbSeedTitles": [],
+    "omdbApiKey": "f15f4a98",
 
     "cacheHours": 6,
 
