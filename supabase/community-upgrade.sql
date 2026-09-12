@@ -1,5 +1,5 @@
 -- Run this migration on an existing IRAQ EMPIRE CINEMA Supabase project.
--- It adds notifications and automatic community notifications without replacing existing data.
+-- It adds notifications, automatic community notifications and banned-user protection.
 
 create table if not exists public.notifications (
     id uuid primary key default gen_random_uuid(),
@@ -24,6 +24,35 @@ for select using (auth.uid() = user_id);
 drop policy if exists "users update own notifications" on public.notifications;
 create policy "users update own notifications" on public.notifications
 for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- Existing policies are replaced so banned users cannot create community content.
+drop policy if exists "users create comments" on public.comments;
+create policy "users create comments" on public.comments
+for insert with check (
+    auth.uid() = user_id
+    and exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_banned = false)
+);
+
+drop policy if exists "users create own reactions" on public.comment_reactions;
+create policy "users create own reactions" on public.comment_reactions
+for insert with check (
+    auth.uid() = user_id
+    and exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_banned = false)
+);
+
+drop policy if exists "users update own reactions" on public.comment_reactions;
+create policy "users update own reactions" on public.comment_reactions
+for update using (auth.uid() = user_id) with check (
+    auth.uid() = user_id
+    and exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_banned = false)
+);
+
+drop policy if exists "users create reports" on public.reports;
+create policy "users create reports" on public.reports
+for insert with check (
+    auth.uid() = reporter_id
+    and exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_banned = false)
+);
 
 create or replace function public.notify_comment_reply()
 returns trigger
