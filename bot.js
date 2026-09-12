@@ -6,41 +6,52 @@ const path = require("path");
 
 const config = require("./config.json");
 
-const PORT = Number(
-    process.env.PORT ||
-    config.port ||
-    3000
-);
-
-const ROOT = __dirname;
-const DATA_DIR = path.join(ROOT, "data");
-const CACHE_FILE = path.join(
-    DATA_DIR,
-    "movies.json"
-);
-
-const CACHE_TTL =
-    Number(config.cacheHours || 6) *
-    60 *
-    60 *
-    1000;
-
-fs.mkdirSync(DATA_DIR, {
-    recursive: true
-});
-
 const app = express();
 
-app.disable("x-powered-by");
+const PORT = process.env.PORT || config.port || 3000;
 
-app.use(
-    express.json({
-        limit: "32kb"
-    })
-);
+const DATA_DIR = path.join(__dirname, "data");
+const MOVIES_FILE = path.join(DATA_DIR, "movies.json");
+
+const TMDB_ACCESS_TOKEN =
+    process.env.TMDB_ACCESS_TOKEN ||
+    config.tmdbAccessToken ||
+    "";
+
+const TMDB_API_KEY =
+    process.env.TMDB_API_KEY ||
+    config.tmdbApiKey ||
+    "";
+
+const OMDB_API_KEY =
+    process.env.OMDB_API_KEY ||
+    config.omdbApiKey ||
+    "";
+
+const SYNC_SECRET =
+    process.env.SYNC_SECRET ||
+    config.syncSecret ||
+    "";
+
+const CACHE_HOURS =
+    Number(config.cacheHours) > 0
+        ? Number(config.cacheHours)
+        : 6;
+
+const TMDB_BASE = "https://api.themoviedb.org/3";
+const TMDB_IMAGE = "https://image.tmdb.org/t/p/w500";
+const TMDB_BACKDROP = "https://image.tmdb.org/t/p/w1280";
+
+const OMDB_BASE = "https://www.omdbapi.com/";
 
 /* =========================================================
-   التصنيفات
+   Express
+========================================================= */
+
+app.use(express.json({ limit: "1mb" }));
+
+/* =========================================================
+   Genres
 ========================================================= */
 
 const GENRES = {
@@ -52,167 +63,140 @@ const GENRES = {
     99: "وثائقي",
     18: "دراما",
     10751: "عائلي",
-    14: "خيال",
+    14: "فانتازيا",
     36: "تاريخي",
     27: "رعب",
     10402: "موسيقى",
     9648: "غموض",
     10749: "رومانسي",
     878: "خيال علمي",
+    10770: "تلفزيوني",
     53: "إثارة",
     10752: "حربي",
     37: "غربي"
 };
 
 /* =========================================================
-   حالة النظام
+   Helpers
 ========================================================= */
 
-let movieStore = loadCache();
-
-let syncRunning = false;
-let lastSync = null;
-let lastError = null;
-
-/* =========================================================
-   Cache
-========================================================= */
-
-function createEmptyStore() {
-    return {
-        updatedAt: null,
-        sources: {},
-        movies: []
-    };
-}
-
-function loadCache() {
-    try {
-        if (!fs.existsSync(CACHE_FILE)) {
-            return createEmptyStore();
-        }
-
-        const raw = JSON.parse(
-            fs.readFileSync(
-                CACHE_FILE,
-                "utf8"
-            )
-        );
-
-        if (
-            !raw ||
-            !Array.isArray(raw.movies)
-        ) {
-            return createEmptyStore();
-        }
-
-        return raw;
-
-    } catch {
-        return createEmptyStore();
+function ensureDataDirectory() {
+    if (!fs.existsSync(DATA_DIR)) {
+        fs.mkdirSync(DATA_DIR, { recursive: true });
     }
 }
 
-function saveCache() {
+function loadMovies() {
+    ensureDataDirectory();
+
+    if (!fs.existsSync(MOVIES_FILE)) {
+        return [];
+    }
+
+    try {
+        const raw = fs.readFileSync(MOVIES_FILE, "utf8");
+
+        if (!raw.trim()) {
+            return [];
+        }
+
+        const data = JSON.parse(raw);
+
+        return Array.isArray(data) ? data : [];
+    } catch (error) {
+        console.error("MOVIES LOAD ERROR:", error.message);
+        return [];
+    }
+}
+
+function saveMovies(movies) {
+    ensureDataDirectory();
+
     fs.writeFileSync(
-        CACHE_FILE,
-        JSON.stringify(
-            movieStore,
-            null,
-            2
-        ),
+        MOVIES_FILE,
+        JSON.stringify(movies, null, 2),
         "utf8"
     );
 }
 
-/* =========================================================
-   مصادر البيانات
-========================================================= */
-
-function hasTMDB() {
-    return Boolean(
-        config.tmdbAccessToken ||
-        config.tmdbApiKey
-    );
-}
-
-function hasOMDb() {
-    return Boolean(
-        config.omdbApiKey
-    );
-}
-
-/* =========================================================
-   TMDB
-========================================================= */
-
-function tmdbHeaders() {
-
-    if (!config.tmdbAccessToken) {
-        return {};
+function cleanText(value) {
+    if (value === null || value === undefined) {
+        return "";
     }
 
-    return {
-        Authorization:
-            `Bearer ${config.tmdbAccessToken}`
-    };
+    return String(value).trim();
 }
 
-async function tmdb(
-    endpoint,
-    params = {}
-) {
+function numberOrNull(value) {
+    const n = Number(value);
 
-    if (!hasTMDB()) {
-        throw new Error(
-            "TMDB credentials are missing"
-        );
+    return Number.isFinite(n) ? n : null;
+}
+
+function uniqueMovies(movies) {
+    const map = new Map();
+
+    for (const movie of movies) {
+        if (!movie) continue;
+
+        const key =
+            movie.imdbId ||
+            movie.tmdbId ||
+            movie.id ||
+            movie.title?.toLowerCase();
+
+        if (!key) continue;
+
+        if (!map.has(key)) {
+            map.set(key, movie);
+        } else {
+            const old = map.get(key);
+
+            map.set(key, {
+                ...old,
+                ...movie
+            });
+        }
     }
 
-    const url = new URL(
-        `https://api.themoviedb.org/3${endpoint}`
-    );
+    return Array.from(map.values());
+}
 
-    for (
-        const [key, value]
-        of Object.entries(params)
-    ) {
+/* =========================================================
+   TMDB Request
+========================================================= */
 
+async function tmdbRequest(endpoint, params = {}) {
+    const url = new URL(`${TMDB_BASE}${endpoint}`);
+
+    for (const [key, value] of Object.entries(params)) {
         if (
             value !== undefined &&
             value !== null &&
             value !== ""
         ) {
-
-            url.searchParams.set(
-                key,
-                String(value)
-            );
+            url.searchParams.set(key, value);
         }
     }
 
-    if (
-        !config.tmdbAccessToken &&
-        config.tmdbApiKey
-    ) {
+    const headers = {
+        Accept: "application/json"
+    };
 
-        url.searchParams.set(
-            "api_key",
-            config.tmdbApiKey
-        );
+    if (TMDB_ACCESS_TOKEN) {
+        headers.Authorization = `Bearer ${TMDB_ACCESS_TOKEN}`;
     }
 
-    const response = await fetch(
-        url,
-        {
-            headers: tmdbHeaders()
-        }
-    );
+    const response = await fetch(url, {
+        method: "GET",
+        headers
+    });
 
     if (!response.ok) {
+        const text = await response.text();
 
         throw new Error(
-            `TMDB ${response.status}`
+            `TMDB ${response.status}: ${text.slice(0, 300)}`
         );
     }
 
@@ -220,979 +204,1006 @@ async function tmdb(
 }
 
 /* =========================================================
-   OMDb
+   OMDb Request
 ========================================================= */
 
-async function omdb(
-    params = {}
-) {
-
-    if (!hasOMDb()) {
-        throw new Error(
-            "OMDb credentials are missing"
-        );
+async function omdbRequest(params = {}) {
+    if (!OMDB_API_KEY) {
+        return null;
     }
 
-    const url = new URL(
-        "https://www.omdbapi.com/"
-    );
+    const url = new URL(OMDB_BASE);
 
-    url.searchParams.set(
-        "apikey",
-        config.omdbApiKey
-    );
+    url.searchParams.set("apikey", OMDB_API_KEY);
 
-    for (
-        const [key, value]
-        of Object.entries(params)
-    ) {
-
+    for (const [key, value] of Object.entries(params)) {
         if (
             value !== undefined &&
             value !== null &&
             value !== ""
         ) {
-
-            url.searchParams.set(
-                key,
-                String(value)
-            );
+            url.searchParams.set(key, value);
         }
     }
 
-    const response =
-        await fetch(url);
+    const response = await fetch(url);
 
     if (!response.ok) {
-
         throw new Error(
             `OMDb HTTP ${response.status}`
         );
     }
 
-    const data =
-        await response.json();
+    const data = await response.json();
 
-    if (
-        data.Response === "False"
-    ) {
-
-        throw new Error(
-            data.Error ||
-            "OMDb request failed"
-        );
+    if (data.Response === "False") {
+        return null;
     }
 
     return data;
 }
 
 /* =========================================================
-   تحويل TMDB
+   Get TMDB IMDb ID
 ========================================================= */
 
-function normalizeTMDB(movie) {
+async function getTmdbExternalIds(tmdbId) {
+    try {
+        const data = await tmdbRequest(
+            `/movie/${tmdbId}/external_ids`
+        );
 
-    const year =
-        movie.release_date
-            ? Number(
-                movie.release_date.slice(
-                    0,
-                    4
-                )
-            )
-            : null;
+        return {
+            imdbId: data?.imdb_id || null,
+            facebookId: data?.facebook_id || null,
+            instagramId: data?.instagram_id || null,
+            twitterId: data?.twitter_id || null
+        };
+    } catch (error) {
+        console.log(
+            `TMDB EXTERNAL IDS FAILED ${tmdbId}:`,
+            error.message
+        );
+
+        return {
+            imdbId: null
+        };
+    }
+}
+
+/* =========================================================
+   Normalize TMDB Movie
+========================================================= */
+
+function normalizeTmdbMovie(movie, category = "popular") {
+    const title =
+        movie.title ||
+        movie.original_title ||
+        "فيلم بدون اسم";
+
+    const genres = Array.isArray(movie.genre_ids)
+        ? movie.genre_ids
+            .map(id => GENRES[id])
+            .filter(Boolean)
+        : [];
 
     return {
+        id: `tmdb-${movie.id}`,
+        tmdbId: movie.id,
 
-        id:
-            `tmdb-${movie.id}`,
+        source: "tmdb",
 
-        tmdbId:
-            movie.id,
-
-        imdbId:
-            movie.imdb_id ||
-            null,
-
-        source:
-            "TMDB",
-
-        title:
-            movie.title ||
-            movie.original_title ||
-            "بدون عنوان",
-
+        title,
         originalTitle:
-            movie.original_title ||
-            null,
+            movie.original_title || title,
 
         overview:
-            movie.overview ||
-            "لا يوجد وصف متاح.",
-
-        year,
-
-        releaseDate:
-            movie.release_date ||
-            null,
-
-        rating:
-            Number(
-                movie.vote_average || 0
-            ),
-
-        voteCount:
-            Number(
-                movie.vote_count || 0
-            ),
-
-        popularity:
-            Number(
-                movie.popularity || 0
-            ),
-
-        genres:
-            Array.isArray(
-                movie.genre_ids
-            )
-                ? movie.genre_ids
-                    .map(
-                        id =>
-                            GENRES[id]
-                    )
-                    .filter(Boolean)
-                : [],
+            movie.overview || "لا يوجد وصف متوفر.",
 
         poster:
             movie.poster_path
-                ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+                ? `${TMDB_IMAGE}${movie.poster_path}`
                 : null,
 
         backdrop:
             movie.backdrop_path
-                ? `https://image.tmdb.org/t/p/w1280${movie.backdrop_path}`
-                : null,
-
-        runtime:
-            movie.runtime ||
-            null
-    };
-}
-
-/* =========================================================
-   تحويل OMDb
-========================================================= */
-
-function normalizeOMDb(movie) {
-
-    const rating =
-        Number(
-            movie.imdbRating
-        );
-
-    return {
-
-        id:
-            `imdb-${movie.imdbID}`,
-
-        tmdbId:
-            null,
-
-        imdbId:
-            movie.imdbID ||
-            null,
-
-        source:
-            "OMDb",
-
-        title:
-            movie.Title ||
-            "بدون عنوان",
-
-        originalTitle:
-            movie.Title ||
-            null,
-
-        overview:
-            movie.Plot &&
-            movie.Plot !== "N/A"
-                ? movie.Plot
-                : "لا يوجد وصف متاح.",
-
-        year:
-            movie.Year &&
-            /^\d{4}/.test(
-                movie.Year
-            )
-                ? Number(
-                    movie.Year.slice(
-                        0,
-                        4
-                    )
-                )
+                ? `${TMDB_BACKDROP}${movie.backdrop_path}`
                 : null,
 
         releaseDate:
-            null,
+            movie.release_date || null,
 
-        rating:
-            Number.isFinite(
-                rating
-            )
-                ? rating
-                : 0,
-
-        voteCount:
-            0,
-
-        popularity:
-            0,
-
-        genres:
-            movie.Genre &&
-            movie.Genre !== "N/A"
-                ? movie.Genre
-                    .split(",")
-                    .map(
-                        x =>
-                            x.trim()
-                    )
-                : [],
-
-        poster:
-            movie.Poster &&
-            movie.Poster !== "N/A"
-                ? movie.Poster
+        year:
+            movie.release_date
+                ? movie.release_date.slice(0, 4)
                 : null,
 
-        backdrop:
-            null,
+        rating:
+            numberOrNull(movie.vote_average),
 
-        runtime:
-            movie.Runtime &&
-            movie.Runtime !== "N/A"
-                ? movie.Runtime
-                : null
+        votes:
+            numberOrNull(movie.vote_count),
+
+        popularity:
+            numberOrNull(movie.popularity),
+
+        genres,
+
+        category,
+
+        imdbId: null,
+
+        imdbRating: null,
+
+        actors: [],
+
+        director: null,
+
+        writer: null,
+
+        runtime: null,
+
+        rated: null,
+
+        country: null,
+
+        language: null,
+
+        awards: null,
+
+        production: null,
+
+        trailer: null,
+
+        updatedAt: new Date().toISOString()
     };
 }
 
 /* =========================================================
-   TMDB Page
+   Get TMDB Movies
 ========================================================= */
 
-async function fetchTMDBPage(
-    endpoint,
-    params
-) {
+async function getTmdbMovies() {
+    const movies = [];
 
-    const data =
-        await tmdb(
-            endpoint,
-            params
-        );
+    const requests = [
+        {
+            endpoint: "/movie/popular",
+            params: {
+                language: "ar-SA",
+                region: "IQ",
+                page: 1
+            },
+            category: "popular"
+        },
 
-    if (
-        !Array.isArray(
-            data.results
-        )
-    ) {
-        return [];
-    }
+        {
+            endpoint: "/trending/movie/week",
+            params: {
+                language: "ar-SA"
+            },
+            category: "trending"
+        },
 
-    return data.results.map(
-        normalizeTMDB
-    );
-}
+        {
+            endpoint: "/movie/top_rated",
+            params: {
+                language: "ar-SA",
+                region: "IQ",
+                page: 1
+            },
+            category: "top_rated"
+        },
 
-/* =========================================================
-   إزالة التكرار
-========================================================= */
+        {
+            endpoint: "/movie/now_playing",
+            params: {
+                language: "ar-SA",
+                region: "IQ",
+                page: 1
+            },
+            category: "now_playing"
+        },
 
-function uniqueMovies(movies) {
+        {
+            endpoint: "/movie/upcoming",
+            params: {
+                language: "ar-SA",
+                region: "IQ",
+                page: 1
+            },
+            category: "upcoming"
+        }
+    ];
 
-    const map =
-        new Map();
+    for (const request of requests) {
+        try {
+            const data = await tmdbRequest(
+                request.endpoint,
+                request.params
+            );
 
-    for (
-        const movie
-        of movies
-    ) {
+            if (!Array.isArray(data?.results)) {
+                continue;
+            }
 
-        const key =
-            movie.imdbId ||
-            `tmdb:${movie.tmdbId}` ||
-            `${movie.title}:${movie.year}`;
-
-        if (
-            !map.has(key)
-        ) {
-
-            map.set(
-                key,
-                movie
+            for (const movie of data.results) {
+                movies.push(
+                    normalizeTmdbMovie(
+                        movie,
+                        request.category
+                    )
+                );
+            }
+        } catch (error) {
+            console.error(
+                `TMDB CATEGORY ERROR [${request.category}]:`,
+                error.message
             );
         }
     }
 
-    return [
-        ...map.values()
-    ];
+    return uniqueMovies(movies);
 }
 
 /* =========================================================
-   تحديث المكتبة
+   Add TMDB Details + IMDb ID
 ========================================================= */
 
-async function syncMovies() {
+async function enrichFromTmdb(movies) {
+    const result = [];
 
+    /*
+       لا نريد إرسال مئات الطلبات في كل تحديث.
+       لذلك نأخذ أول 40 فيلمًا بعد الدمج.
+    */
+
+    const limit = Math.min(movies.length, 40);
+
+    for (let i = 0; i < limit; i++) {
+        const movie = movies[i];
+
+        try {
+            const externalIds =
+                await getTmdbExternalIds(
+                    movie.tmdbId
+                );
+
+            movie.imdbId =
+                externalIds.imdbId || null;
+        } catch (error) {
+            movie.imdbId = null;
+        }
+
+        result.push(movie);
+    }
+
+    /*
+       الأفلام التي لم نطلب external IDs لها
+       تبقى كما هي.
+    */
+
+    for (let i = limit; i < movies.length; i++) {
+        result.push(movies[i]);
+    }
+
+    return result;
+}
+
+/* =========================================================
+   OMDb Enrichment
+========================================================= */
+
+async function enrichFromOmdb(movies) {
+    if (!OMDB_API_KEY) {
+        console.log(
+            "OMDb → DISABLED (API key not configured)"
+        );
+
+        return movies;
+    }
+
+    console.log(
+        `OMDb → Enriching ${Math.min(movies.length, 40)} movies...`
+    );
+
+    const result = [];
+    const limit = Math.min(movies.length, 40);
+
+    for (let i = 0; i < limit; i++) {
+        const movie = movies[i];
+
+        try {
+            let omdb = null;
+
+            /*
+               الأفضل استخدام IMDb ID القادم من TMDB.
+            */
+
+            if (movie.imdbId) {
+                omdb = await omdbRequest({
+                    i: movie.imdbId,
+                    plot: "full"
+                });
+            }
+
+            /*
+               إذا لم نجد IMDb ID نحاول البحث بالعنوان.
+            */
+
+            if (!omdb && movie.title) {
+                omdb = await omdbRequest({
+                    t: movie.title,
+                    type: "movie",
+                    plot: "full"
+                });
+            }
+
+            if (omdb) {
+                const imdbRating =
+                    omdb.imdbRating &&
+                    omdb.imdbRating !== "N/A"
+                        ? numberOrNull(omdb.imdbRating)
+                        : null;
+
+                const imdbVotes =
+                    omdb.imdbVotes &&
+                    omdb.imdbVotes !== "N/A"
+                        ? omdb.imdbVotes
+                        : null;
+
+                movie.imdbId =
+                    omdb.imdbID ||
+                    movie.imdbId ||
+                    null;
+
+                movie.imdbRating =
+                    imdbRating;
+
+                movie.imdbVotes =
+                    imdbVotes;
+
+                movie.year =
+                    omdb.Year !== "N/A"
+                        ? omdb.Year
+                        : movie.year;
+
+                movie.runtime =
+                    omdb.Runtime !== "N/A"
+                        ? omdb.Runtime
+                        : null;
+
+                movie.rated =
+                    omdb.Rated !== "N/A"
+                        ? omdb.Rated
+                        : null;
+
+                movie.director =
+                    omdb.Director !== "N/A"
+                        ? omdb.Director
+                        : null;
+
+                movie.writer =
+                    omdb.Writer !== "N/A"
+                        ? omdb.Writer
+                        : null;
+
+                movie.country =
+                    omdb.Country !== "N/A"
+                        ? omdb.Country
+                        : null;
+
+                movie.language =
+                    omdb.Language !== "N/A"
+                        ? omdb.Language
+                        : null;
+
+                movie.awards =
+                    omdb.Awards !== "N/A"
+                        ? omdb.Awards
+                        : null;
+
+                movie.production =
+                    omdb.Production !== "N/A"
+                        ? omdb.Production
+                        : null;
+
+                movie.actors =
+                    omdb.Actors &&
+                    omdb.Actors !== "N/A"
+                        ? omdb.Actors
+                            .split(",")
+                            .map(x => x.trim())
+                            .filter(Boolean)
+                        : [];
+
+                /*
+                   OMDb يعطي Poster أحيانًا.
+                   إذا TMDB لا يملك صورة، نستخدم صورة OMDb.
+                */
+
+                if (
+                    (!movie.poster ||
+                        movie.poster === "N/A") &&
+                    omdb.Poster &&
+                    omdb.Poster !== "N/A"
+                ) {
+                    movie.poster = omdb.Poster;
+                }
+
+                /*
+                   إذا لم يوجد وصف في TMDB،
+                   نستخدم Plot من OMDb.
+                */
+
+                if (
+                    (!movie.overview ||
+                        movie.overview === "لا يوجد وصف متوفر.") &&
+                    omdb.Plot &&
+                    omdb.Plot !== "N/A"
+                ) {
+                    movie.overview = omdb.Plot;
+                }
+
+                /*
+                   تقييم OMDb يكون منفصلًا عن TMDB.
+                */
+
+                movie.ratings = {
+                    tmdb: movie.rating,
+                    imdb: imdbRating,
+                    imdbVotes
+                };
+            }
+
+            movie.updatedAt =
+                new Date().toISOString();
+
+            result.push(movie);
+
+            /*
+               تأخير بسيط لتقليل الضغط على OMDb.
+            */
+
+            await sleep(120);
+        } catch (error) {
+            console.log(
+                `OMDb FAILED [${movie.title}]:`,
+                error.message
+            );
+
+            result.push(movie);
+        }
+    }
+
+    /*
+       باقي الأفلام بدون OMDb enrichment.
+    */
+
+    for (let i = limit; i < movies.length; i++) {
+        result.push(movies[i]);
+    }
+
+    return result;
+}
+
+/* =========================================================
+   Sleep
+========================================================= */
+
+function sleep(ms) {
+    return new Promise(resolve =>
+        setTimeout(resolve, ms)
+    );
+}
+
+/* =========================================================
+   Full Sync
+========================================================= */
+
+let syncRunning = false;
+
+async function syncMovies() {
     if (syncRunning) {
-        return movieStore;
+        console.log(
+            "MOVIE SYNC → already running"
+        );
+
+        return loadMovies();
     }
 
     syncRunning = true;
-    lastError = null;
 
     try {
+        console.log("");
+        console.log(
+            "================================"
+        );
+        console.log(
+            "NOVA CINEMA → MOVIE SYNC START"
+        );
+        console.log(
+            "================================"
+        );
 
-        const collected = [];
-        const sources = {};
-
-        /* =========================
-           TMDB
-        ========================= */
-
-        if (hasTMDB()) {
-
-            const requests = [
-
-                [
-                    "popular",
-                    "/movie/popular",
-                    {
-                        language: "ar-SA",
-                        region: "IQ",
-                        page: 1
-                    }
-                ],
-
-                [
-                    "trending",
-                    "/trending/movie/week",
-                    {
-                        language: "ar-SA"
-                    }
-                ],
-
-                [
-                    "topRated",
-                    "/movie/top_rated",
-                    {
-                        language: "ar-SA",
-                        region: "IQ",
-                        page: 1
-                    }
-                ],
-
-                [
-                    "nowPlaying",
-                    "/movie/now_playing",
-                    {
-                        language: "ar-SA",
-                        region: "IQ",
-                        page: 1
-                    }
-                ],
-
-                [
-                    "upcoming",
-                    "/movie/upcoming",
-                    {
-                        language: "ar-SA",
-                        region: "IQ",
-                        page: 1
-                    }
-                ]
-            ];
-
-            for (
-                const [
-                    name,
-                    endpoint,
-                    params
-                ]
-                of requests
-            ) {
-
-                try {
-
-                    const movies =
-                        await fetchTMDBPage(
-                            endpoint,
-                            params
-                        );
-
-                    collected.push(
-                        ...movies
-                    );
-
-                    sources[name] =
-                        movies.length;
-
-                } catch (error) {
-
-                    sources[name] =
-                        0;
-
-                    lastError =
-                        `TMDB ${name}: ${error.message}`;
-                }
-            }
+        if (!TMDB_ACCESS_TOKEN && !TMDB_API_KEY) {
+            throw new Error(
+                "TMDB API credentials are missing."
+            );
         }
 
-        /* =========================
-           OMDb
-        ========================= */
+        let movies =
+            await getTmdbMovies();
 
-        if (
-            hasOMDb() &&
-            Array.isArray(
-                config.omdbSeedTitles
-            )
-        ) {
+        console.log(
+            `TMDB → ${movies.length} movies`
+        );
 
-            let count = 0;
+        /*
+           الحصول على IMDb IDs
+        */
 
-            for (
-                const title
-                of config
-                    .omdbSeedTitles
-                    .slice(0, 20)
-            ) {
+        movies =
+            await enrichFromTmdb(movies);
 
-                try {
+        /*
+           دمج بيانات OMDb
+        */
 
-                    const movie =
-                        await omdb({
-                            t: title,
-                            plot: "full"
-                        });
+        movies =
+            await enrichFromOmdb(movies);
 
-                    collected.push(
-                        normalizeOMDb(
-                            movie
-                        )
-                    );
+        /*
+           تنظيف وترتيب
+        */
 
-                    count++;
+        movies = uniqueMovies(movies);
 
-                } catch {}
-            }
+        movies.sort((a, b) => {
+            const popularityA =
+                Number(a.popularity) || 0;
 
-            sources.omdb =
-                count;
-        }
+            const popularityB =
+                Number(b.popularity) || 0;
 
-        /* =========================
-           الدمج
-        ========================= */
+            return popularityB - popularityA;
+        });
 
-        const merged =
-            uniqueMovies(
-                collected
-            )
-                .filter(
-                    movie =>
-                        movie.title
-                )
-                .sort(
-                    (a, b) =>
-                        (
-                            b.popularity ||
-                            b.rating
-                        ) -
-                        (
-                            a.popularity ||
-                            a.rating
-                        )
-                );
+        saveMovies(movies);
 
-        if (merged.length) {
+        console.log(
+            `MOVIE SYNC → SAVED ${movies.length} movies`
+        );
 
-            movieStore = {
+        console.log(
+            "================================"
+        );
+        console.log(
+            "NOVA CINEMA → MOVIE SYNC DONE"
+        );
+        console.log(
+            "================================"
+        );
+        console.log("");
 
-                updatedAt:
-                    new Date()
-                        .toISOString(),
+        return movies;
+    } catch (error) {
+        console.error(
+            "MOVIE SYNC ERROR:",
+            error.message
+        );
 
-                sources,
-
-                movies:
-                    merged
-            };
-
-            saveCache();
-
-            lastSync =
-                movieStore.updatedAt;
-        }
-
-        return movieStore;
-
+        return loadMovies();
     } finally {
-
-        syncRunning =
-            false;
+        syncRunning = false;
     }
 }
 
 /* =========================================================
-   تحديث تلقائي
+   Cache Check
 ========================================================= */
 
-function maybeSync() {
+function cacheNeedsSync() {
+    if (!fs.existsSync(MOVIES_FILE)) {
+        return true;
+    }
 
-    const updated =
-        movieStore.updatedAt
-            ? Date.parse(
-                movieStore.updatedAt
-            )
-            : 0;
+    try {
+        const stats =
+            fs.statSync(MOVIES_FILE);
 
-    if (
-        !updated ||
-        Date.now() - updated >
-            CACHE_TTL
-    ) {
+        const age =
+            Date.now() - stats.mtimeMs;
 
-        syncMovies()
-            .catch(error => {
+        const maxAge =
+            CACHE_HOURS *
+            60 *
+            60 *
+            1000;
 
-                lastError =
-                    error.message;
-
-                console.error(
-                    "AUTO SYNC ERROR →",
-                    error.message
-                );
-            });
+        return age >= maxAge;
+    } catch {
+        return true;
     }
 }
 
 /* =========================================================
-   ترتيب
+   Protected Files
 ========================================================= */
 
-function scoreMovie(movie) {
+const BLOCKED_FILES = new Set([
+    "/config.json",
+    "/package.json",
+    "/package-lock.json",
+    "/server.js",
+    "/bot.js",
+    "/data/movies.json",
+    "/.env"
+]);
 
-    return (
-        (movie.popularity || 0) +
-        (movie.rating || 0) * 8 +
-        Math.log10(
-            (movie.voteCount || 0) + 1
-        )
-    );
-}
-
-/* =========================================================
-   فلترة
-========================================================= */
-
-function filterMovies(query) {
-
-    let movies =
-        [...movieStore.movies];
-
-    const q =
-        String(
-            query.q || ""
-        )
-            .trim()
-            .toLowerCase();
-
-    const category =
-        String(
-            query.category ||
-            "all"
-        )
-            .trim()
-            .toLowerCase();
-
-    const sort =
-        String(
-            query.sort ||
-            "popular"
-        );
-
-    if (q) {
-
-        movies =
-            movies.filter(
-                movie =>
-                    [
-                        movie.title,
-                        movie.originalTitle,
-                        movie.overview,
-                        ...(movie.genres || [])
-                    ]
-                        .filter(Boolean)
-                        .join(" ")
-                        .toLowerCase()
-                        .includes(q)
-            );
+app.use((req, res, next) => {
+    if (BLOCKED_FILES.has(req.path)) {
+        return res.status(403).json({
+            error: "Forbidden"
+        });
     }
 
-    if (
-        category !== "all"
-    ) {
-
-        movies =
-            movies.filter(
-                movie =>
-                    (
-                        movie.genres ||
-                        []
-                    ).some(
-                        genre =>
-                            genre
-                                .toLowerCase()
-                                .includes(
-                                    category
-                                )
-                    )
-            );
-    }
-
-    if (
-        sort === "rating"
-    ) {
-
-        movies.sort(
-            (a, b) =>
-                scoreMovie(b) -
-                scoreMovie(a)
-        );
-
-    } else if (
-        sort === "new"
-    ) {
-
-        movies.sort(
-            (a, b) =>
-                (b.year || 0) -
-                (a.year || 0)
-        );
-
-    } else {
-
-        movies.sort(
-            (a, b) =>
-                scoreMovie(b) -
-                scoreMovie(a)
-        );
-    }
-
-    return movies;
-}
-
-/* =========================================================
-   حماية الملفات
-========================================================= */
-
-app.use(
-    (req, res, next) => {
-
-        const blocked = [
-
-            "/config.json",
-            "/package.json",
-            "/package-lock.json",
-            "/server.js",
-            "/bot.js",
-            "/data/movies.json"
-
-        ];
-
-        if (
-            blocked.includes(
-                req.path
-            )
-        ) {
-
-            return res
-                .status(403)
-                .send(
-                    "Forbidden"
-                );
-        }
-
-        next();
-    }
-);
-
-/* =========================================================
-   الملفات
-========================================================= */
-
-app.use(
-    express.static(ROOT)
-);
+    next();
+});
 
 /* =========================================================
    Health
 ========================================================= */
 
-app.get(
-    "/health",
-    (req, res) => {
-
-        res.json({
-
-            ok: true,
-
-            name:
-                "IRAQ EMPIRE CINEMA",
-
-            updatedAt:
-                movieStore.updatedAt
-        });
-    }
-);
+app.get("/health", (req, res) => {
+    res.json({
+        ok: true,
+        service: "NOVA CINEMA",
+        discord: false,
+        tmdb: Boolean(
+            TMDB_ACCESS_TOKEN ||
+            TMDB_API_KEY
+        ),
+        omdb: Boolean(OMDB_API_KEY),
+        time: new Date().toISOString()
+    });
+});
 
 /* =========================================================
-   حالة النظام
+   Status
 ========================================================= */
 
-app.get(
-    "/api/status",
-    (req, res) => {
+app.get("/api/status", (req, res) => {
+    const movies = loadMovies();
 
-        res.json({
+    let lastUpdate = null;
 
-            ok: true,
-
-            name:
-                "IRAQ EMPIRE CINEMA",
-
-            movieCount:
-                movieStore.movies.length,
-
-            updatedAt:
-                movieStore.updatedAt,
-
-            lastSync,
-
-            syncRunning,
-
-            sources:
-                movieStore.sources,
-
-            error:
-                lastError
-        });
-    }
-);
-
-/* =========================================================
-   API الأفلام
-========================================================= */
-
-app.get(
-    "/api/movies",
-    (req, res) => {
-
-        maybeSync();
-
-        const page =
-            Math.max(
-                1,
-                Number(
-                    req.query.page ||
-                    1
-                )
-            );
-
-        const limit =
-            Math.min(
-                40,
-                Math.max(
-                    1,
-                    Number(
-                        req.query.limit ||
-                        20
-                    )
-                )
-            );
-
-        const movies =
-            filterMovies(
-                req.query
-            );
-
-        const start =
-            (page - 1) *
-            limit;
-
-        res.json({
-
-            movies:
-                movies.slice(
-                    start,
-                    start + limit
-                ),
-
-            page,
-
-            limit,
-
-            total:
-                movies.length,
-
-            updatedAt:
-                movieStore.updatedAt
-        });
-    }
-);
-
-/* =========================================================
-   فيلم واحد
-========================================================= */
-
-app.get(
-    "/api/movies/:id",
-    (req, res) => {
-
-        const movie =
-            movieStore.movies.find(
-                item =>
-                    item.id ===
-                    req.params.id
-            );
-
-        if (!movie) {
-
-            return res
-                .status(404)
-                .json({
-                    error:
-                        "الفيلم غير موجود"
-                });
-        }
-
-        res.json(movie);
-    }
-);
-
-/* =========================================================
-   تحديث يدوي
-========================================================= */
-
-app.post(
-    "/api/sync",
-    async (req, res) => {
-
-        if (
-            config.syncSecret &&
-            req.get(
-                "x-sync-secret"
-            ) !==
-                config.syncSecret
-        ) {
-
-            return res
-                .status(403)
-                .json({
-                    error:
-                        "Forbidden"
-                });
-        }
-
+    if (fs.existsSync(MOVIES_FILE)) {
         try {
-
-            const store =
-                await syncMovies();
-
-            res.json({
-
-                ok: true,
-
-                count:
-                    store.movies.length,
-
-                updatedAt:
-                    store.updatedAt
-            });
-
-        } catch (error) {
-
-            res
-                .status(500)
-                .json({
-
-                    ok: false,
-
-                    error:
-                        error.message
-                });
-        }
+            lastUpdate =
+                fs.statSync(
+                    MOVIES_FILE
+                ).mtime.toISOString();
+        } catch {}
     }
-);
+
+    res.json({
+        success: true,
+
+        service: "NOVA CINEMA",
+
+        movies: movies.length,
+
+        sources: {
+            tmdb: Boolean(
+                TMDB_ACCESS_TOKEN ||
+                TMDB_API_KEY
+            ),
+
+            omdb: Boolean(
+                OMDB_API_KEY
+            )
+        },
+
+        cacheHours: CACHE_HOURS,
+
+        lastUpdate,
+
+        syncRunning,
+
+        discord: false
+    });
+});
 
 /* =========================================================
-   تشغيل الموقع
+   Movies API
 ========================================================= */
 
-const server =
-    app.listen(
-        PORT,
-        () => {
+app.get("/api/movies", (req, res) => {
+    let movies = loadMovies();
 
-            console.log(
-                "========================================"
+    const search =
+        cleanText(req.query.search)
+            .toLowerCase();
+
+    const genre =
+        cleanText(req.query.genre)
+            .toLowerCase();
+
+    const category =
+        cleanText(req.query.category)
+            .toLowerCase();
+
+    const sort =
+        cleanText(req.query.sort)
+            .toLowerCase();
+
+    if (search) {
+        movies = movies.filter(movie => {
+            const title =
+                cleanText(movie.title)
+                    .toLowerCase();
+
+            const originalTitle =
+                cleanText(movie.originalTitle)
+                    .toLowerCase();
+
+            const overview =
+                cleanText(movie.overview)
+                    .toLowerCase();
+
+            const imdbId =
+                cleanText(movie.imdbId)
+                    .toLowerCase();
+
+            return (
+                title.includes(search) ||
+                originalTitle.includes(search) ||
+                overview.includes(search) ||
+                imdbId.includes(search)
             );
+        });
+    }
 
-            console.log(
-                "IRAQ EMPIRE CINEMA ONLINE"
-            );
-
-            console.log(
-                `PORT → ${PORT}`
-            );
-
-            console.log(
-                "DISCORD → DISABLED"
-            );
-
-            console.log(
-                "========================================"
-            );
-
-            maybeSync();
-        }
-    );
-
-server.on(
-    "error",
-    error => {
-
-        console.error(
-            "WEBSITE SERVER ERROR →",
-            error.message
+    if (genre) {
+        movies = movies.filter(movie =>
+            Array.isArray(movie.genres) &&
+            movie.genres.some(g =>
+                String(g)
+                    .toLowerCase()
+                    .includes(genre)
+            )
         );
     }
+
+    if (category) {
+        movies = movies.filter(movie =>
+            String(movie.category || "")
+                .toLowerCase() === category
+        );
+    }
+
+    switch (sort) {
+        case "rating":
+        case "top":
+            movies.sort(
+                (a, b) =>
+                    (Number(b.rating) || 0) -
+                    (Number(a.rating) || 0)
+            );
+            break;
+
+        case "imdb":
+            movies.sort(
+                (a, b) =>
+                    (Number(b.imdbRating) || 0) -
+                    (Number(a.imdbRating) || 0)
+            );
+            break;
+
+        case "new":
+        case "newest":
+            movies.sort(
+                (a, b) =>
+                    String(b.releaseDate || "")
+                        .localeCompare(
+                            String(a.releaseDate || "")
+                        )
+            );
+            break;
+
+        case "old":
+        case "oldest":
+            movies.sort(
+                (a, b) =>
+                    String(a.releaseDate || "")
+                        .localeCompare(
+                            String(b.releaseDate || "")
+                        )
+            );
+            break;
+
+        case "popular":
+        default:
+            movies.sort(
+                (a, b) =>
+                    (Number(b.popularity) || 0) -
+                    (Number(a.popularity) || 0)
+            );
+            break;
+    }
+
+    res.json({
+        success: true,
+        count: movies.length,
+        movies
+    });
+});
+
+/* =========================================================
+   Single Movie
+========================================================= */
+
+app.get("/api/movies/:id", (req, res) => {
+    const movies = loadMovies();
+
+    const id =
+        cleanText(req.params.id);
+
+    const movie = movies.find(item =>
+        String(item.id) === id ||
+        String(item.tmdbId) === id ||
+        String(item.imdbId) === id
+    );
+
+    if (!movie) {
+        return res.status(404).json({
+            success: false,
+            error: "Movie not found"
+        });
+    }
+
+    res.json({
+        success: true,
+        movie
+    });
+});
+
+/* =========================================================
+   Manual Sync
+========================================================= */
+
+app.post("/api/sync", async (req, res) => {
+    if (SYNC_SECRET) {
+        const provided =
+            req.headers["x-sync-secret"];
+
+        if (
+            !provided ||
+            provided !== SYNC_SECRET
+        ) {
+            return res.status(401).json({
+                success: false,
+                error: "Unauthorized"
+            });
+        }
+    }
+
+    if (syncRunning) {
+        return res.json({
+            success: true,
+            message: "Sync already running"
+        });
+    }
+
+    syncMovies();
+
+    res.json({
+        success: true,
+        message: "Movie sync started"
+    });
+});
+
+/* =========================================================
+   Static Website
+========================================================= */
+
+app.use(
+    express.static(__dirname, {
+        extensions: ["html"]
+    })
 );
 
 /* =========================================================
-   تحديث دوري
+   404
 ========================================================= */
 
-setInterval(
-    () => {
-        maybeSync();
-    },
-    Math.max(
-        15 * 60 * 1000,
-        Math.floor(
-            CACHE_TTL / 2
-        )
-    )
-);
+app.use((req, res) => {
+    if (req.path.startsWith("/api/")) {
+        return res.status(404).json({
+            success: false,
+            error: "API route not found"
+        });
+    }
+
+    res.status(404).send(
+        "NOVA CINEMA → الصفحة غير موجودة"
+    );
+});
+
+/* =========================================================
+   Startup
+========================================================= */
+
+async function start() {
+    ensureDataDirectory();
+
+    app.listen(PORT, () => {
+        console.log("");
+        console.log(
+            "================================"
+        );
+        console.log(
+            "NOVA CINEMA WEBSITE ONLINE"
+        );
+        console.log(
+            `LOCAL → http://localhost:${PORT}`
+        );
+        console.log(
+            `TMDB → ${
+                TMDB_ACCESS_TOKEN ||
+                TMDB_API_KEY
+                    ? "ENABLED"
+                    : "DISABLED"
+            }`
+        );
+        console.log(
+            `OMDb → ${
+                OMDB_API_KEY
+                    ? "ENABLED"
+                    : "DISABLED"
+            }`
+        );
+        console.log(
+            "DISCORD → DISABLED"
+        );
+        console.log(
+            "================================"
+        );
+        console.log("");
+    });
+
+    /*
+       إذا الكاش قديم، حدث البيانات تلقائيًا.
+    */
+
+    if (cacheNeedsSync()) {
+        await syncMovies();
+    } else {
+        const movies = loadMovies();
+
+        console.log(
+            `MOVIE CACHE → ${movies.length} movies`
+        );
+    }
+
+    /*
+       تحديث تلقائي.
+    */
+
+    setInterval(
+        async () => {
+            if (cacheNeedsSync()) {
+                await syncMovies();
+            }
+        },
+        30 * 60 * 1000
+    );
+}
+
+start().catch(error => {
+    console.error(
+        "STARTUP ERROR:",
+        error
+    );
+});
