@@ -2,8 +2,8 @@
 
 /*
  * Homepage resilience layer.
- * It is intentionally independent from index.js so a third-party source
- * failure (429/504) cannot leave the whole homepage empty.
+ * It never calls AniList/Jikan directly from the browser. Anime, manga,
+ * manhwa and novels all come through the same cached server-side catalog API.
  */
 (() => {
     const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -45,16 +45,13 @@
     }
 
     function card(item, type) {
-        const title = clean(item.title || item.name || item.originalTitle || item.title_english || item.title_romaji || "بدون عنوان");
-        const poster = item.poster || item.image || item.images?.jpg?.large_image_url || item.images?.jpg?.image_url || item.coverImage?.extraLarge || item.coverImage?.large || "";
-        const year = clean(item.year || item.releaseDate || item.aired?.from || "").slice(0, 4) || "—";
-        const rating = Number(item.rating || item.score || 0);
-        const id = item.id || item.malId || item.mal_id || "";
-        const watchId = type === "anime" && String(item.id || "").startsWith("anilist:")
-            ? item.id
-            : id;
+        const title = clean(item.title || item.name || item.originalTitle || "بدون عنوان");
+        const poster = item.poster || item.image || item.coverImage?.extraLarge || item.coverImage?.large || "";
+        const year = clean(item.year || item.releaseDate || "").slice(0, 4) || "—";
+        const rating = Number(item.rating || 0);
+        const id = item.id || "";
 
-        return `<article class="content-card" data-id="${esc(watchId)}" tabindex="0" role="link" aria-label="فتح ${esc(title)}">
+        return `<article class="content-card" data-id="${esc(id)}" tabindex="0" role="link" aria-label="فتح ${esc(title)}">
             <div class="card-poster">
                 ${poster ? `<img src="${esc(poster)}" alt="${esc(title)}" loading="lazy" onerror="this.style.display='none'">` : `<div style="width:100%;height:100%;display:grid;place-items:center;color:#d6a84f;font-size:35px">IE</div>`}
                 <span class="card-rating">★ ${Number.isFinite(rating) && rating ? rating.toFixed(1) : "—"}</span>
@@ -78,7 +75,6 @@
             const byType = type => movies.filter(item => String(item?.type || "").toLowerCase() === type);
             render(document.querySelector("#movieGrid"), byType("movie"), "movie");
             render(document.querySelector("#seriesGrid"), byType("series"), "series");
-            render(document.querySelector("#animeGrid"), byType("anime"), "anime");
             render(document.querySelector("#popularGrid"), movies, "movie", 24);
         } catch (error) {
             console.warn("HOME RECOVERY LOCAL:", error.message);
@@ -88,71 +84,33 @@
     async function recoverTVMaze() {
         try {
             const data = await getJSON("https://api.tvmaze.com/shows?page=0", {}, 2);
-            const shows = Array.isArray(data) ? data.map(show => ({ id:`tvmaze:${show.id}`, title:show.name, poster:show.image?.original || show.image?.medium || "", releaseDate:show.premiered || "", rating:show.rating?.average || 0 })) : [];
+            const shows = Array.isArray(data)
+                ? data.map(show => ({
+                    id: `tvmaze:${show.id}`,
+                    title: show.name,
+                    poster: show.image?.original || show.image?.medium || "",
+                    releaseDate: show.premiered || "",
+                    rating: show.rating?.average || 0
+                }))
+                : [];
             render(document.querySelector("#seriesGrid"), shows, "series");
         } catch (error) {
             console.warn("HOME RECOVERY TVMAZE:", error.message);
         }
     }
 
-    async function recoverAnime() {
+    async function recoverMediaCatalog() {
         try {
-            const data = await getJSON("https://graphql.anilist.co", {
-                method:"POST",
-                headers:{ "Content-Type":"application/json" },
-                body:JSON.stringify({ query:`query { Page(page: 1, perPage: 24) { media(type: ANIME, sort: POPULARITY_DESC, isAdult: false) { id idMal title { romaji english native } coverImage { large extraLarge } averageScore startDate { year } } } }` })
-            }, 2);
-            const anime = (data?.data?.Page?.media || []).map(item => ({
-                id:`anilist-anime-${item.id}`,
-                anilistId:item.id,
-                malId:item.idMal,
-                title:item.title?.english || item.title?.romaji || item.title?.native,
-                poster:item.coverImage?.extraLarge || item.coverImage?.large || "",
-                rating:Number(item.averageScore || 0) / 10,
-                year:item.startDate?.year || ""
-            }));
+            const data = await getJSON("/api/catalog-media?page=1&perPage=50", {}, 2);
+            const anime = Array.isArray(data?.anime) ? data.anime : [];
             render(document.querySelector("#animeGrid"), anime, "anime");
         } catch (error) {
-            console.warn("HOME RECOVERY ANILIST:", error.message);
+            console.warn("HOME RECOVERY MEDIA CATALOG:", error.message);
         }
-    }
-
-    async function recoverManga() {
-        const mount = document.querySelector("#anime") || document.querySelector("#popular");
-        if (!mount || document.querySelector("#iraqMangaRecovery")) return;
-
-        let data;
-        try {
-            data = await getJSON("/api/catalog-media?page=1&perPage=50", {}, 2);
-        } catch (error) {
-            console.warn("HOME RECOVERY MANGA:", error.message);
-            return;
-        }
-
-        const manga = Array.isArray(data?.manga) ? data.manga : [];
-        const manhwa = Array.isArray(data?.manhwa) ? data.manhwa : [];
-        const novels = Array.isArray(data?.novels) ? data.novels : [];
-        if (!manga.length && !manhwa.length && !novels.length) return;
-
-        const wrapper = document.createElement("section");
-        wrapper.id = "iraqMangaRecovery";
-        wrapper.className = "section dark-section";
-        wrapper.innerHTML = `
-            <div class="section-head"><div><span class="kicker">IRAQ EMPIRE MANGA</span><h2>مكتبة المانغا</h2><p class="section-description">بيانات حقيقية من المصدر المتاح.</p></div></div>
-            <div class="movie-grid" id="recoveryMangaGrid"></div>
-            <div class="section-head" style="margin-top:28px"><div><span class="kicker">IRAQ EMPIRE MANHWA</span><h2>مكتبة المانهوا</h2><p class="section-description">بيانات حقيقية من المصدر المتاح.</p></div></div>
-            <div class="movie-grid" id="recoveryManhwaGrid"></div>
-            <div class="section-head" style="margin-top:28px"><div><span class="kicker">IRAQ EMPIRE NOVELS</span><h2>مكتبة الروايات</h2><p class="section-description">روايات حقيقية من بيانات AniList.</p></div></div>
-            <div class="movie-grid" id="recoveryNovelGrid"></div>
-        `;
-        mount.parentNode.insertBefore(wrapper, mount.nextSibling);
-        render(document.querySelector("#recoveryMangaGrid"), manga, "manga");
-        render(document.querySelector("#recoveryManhwaGrid"), manhwa, "manhwa");
-        render(document.querySelector("#recoveryNovelGrid"), novels, "novel");
     }
 
     function start() {
-        Promise.allSettled([recoverLocal(), recoverTVMaze(), recoverAnime(), recoverManga()]);
+        Promise.allSettled([recoverLocal(), recoverTVMaze(), recoverMediaCatalog()]);
     }
 
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start, { once:true });
