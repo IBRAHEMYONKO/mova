@@ -3,7 +3,8 @@
 (function () {
     const state = {
         client: null,
-        profile: null
+        profile: null,
+        discordReady: false
     };
 
     const $ = id => document.getElementById(id);
@@ -22,7 +23,13 @@
 
     function profileName(user) {
         const metadata = user?.user_metadata || {};
-        return metadata.full_name || metadata.name || metadata.user_name || user?.email || "عضو الإمبراطورية";
+        return metadata.full_name ||
+            metadata.global_name ||
+            metadata.name ||
+            metadata.user_name ||
+            metadata.preferred_username ||
+            user?.email ||
+            "عضو الإمبراطورية";
     }
 
     function profileAvatar(user) {
@@ -55,6 +62,24 @@
         setVisible("profile-panel", false);
     }
 
+    function readOAuthError() {
+        const values = [];
+        const sources = [window.location.search, window.location.hash];
+
+        for (const source of sources) {
+            if (!source) continue;
+            try {
+                const params = new URLSearchParams(source.replace(/^#/, "?"));
+                const error = params.get("error_description") || params.get("error");
+                if (error) values.push(error);
+            } catch {
+                // Ignore malformed OAuth fragments and let normal boot continue.
+            }
+        }
+
+        return values.length ? decodeURIComponent(values[0].replace(/\+/g, " ")) : "";
+    }
+
     async function loadProfile(user) {
         if (!state.client || !user) return;
 
@@ -83,19 +108,27 @@
     }
 
     async function signIn() {
-        if (!state.client) return;
+        if (!state.client) {
+            setStatus("نظام الحساب غير مهيأ على هذا النشر.", "error");
+            return;
+        }
+
+        if (!state.discordReady) {
+            setStatus("تسجيل Discord غير مفعّل في Supabase حتى الآن.", "error");
+            return;
+        }
 
         setStatus("جاري فتح تسجيل الدخول عبر Discord...", "info");
         const { error } = await state.client.auth.signInWithOAuth({
             provider: "discord",
             options: {
-                redirectTo: window.location.origin + "/account.html"
+                redirectTo: `${window.location.origin}/account.html`
             }
         });
 
         if (error) {
             console.error("DISCORD LOGIN:", error);
-            setStatus("تعذر بدء تسجيل الدخول. تأكد من إعداد Discord داخل Supabase.", "error");
+            setStatus(`تعذر بدء تسجيل الدخول: ${error.message || "خطأ غير معروف"}`, "error");
         }
     }
 
@@ -113,13 +146,19 @@
     }
 
     async function boot() {
+        const oauthError = readOAuthError();
+        if (oauthError) {
+            renderLoggedOut();
+            setStatus(`فشل تسجيل Discord: ${oauthError}`, "error");
+        }
+
         try {
             const response = await fetch("/api/supabase-config", { cache: "no-store" });
             const config = await response.json();
 
             if (!response.ok || !config.configured) {
                 renderLoggedOut();
-                setStatus("تسجيل Discord غير مفعّل على الموقع حاليًا.", "info");
+                setStatus("ربط Discord يحتاج إعداد Supabase في Vercel.", "info");
                 return;
             }
 
@@ -135,6 +174,20 @@
                 }
             });
 
+            try {
+                const statusResponse = await fetch("/api/supabase-status", { cache: "no-store" });
+                if (statusResponse.ok) {
+                    const status = await statusResponse.json();
+                    state.discordReady = status?.discord === true;
+                }
+            } catch (error) {
+                console.warn("SUPABASE STATUS:", error.message);
+            }
+
+            if (!state.discordReady && !oauthError) {
+                setStatus("Supabase متصل، لكن Discord OAuth غير مفعّل بعد.", "info");
+            }
+
             const { data, error } = await state.client.auth.getUser();
             if (error && !/Auth session missing/i.test(error.message || "")) {
                 throw error;
@@ -143,16 +196,21 @@
             if (data?.user) {
                 renderUser(data.user);
                 await loadProfile(data.user);
-                setStatus("تم تسجيل الدخول بنجاح.", "success");
-            } else {
+                if (!data.user) setStatus("تم تسجيل الدخول بنجاح.", "success");
+            } else if (!oauthError) {
                 renderLoggedOut();
-                setStatus("سجّل الدخول لربط حسابك بالموقع.", "info");
+                setStatus(
+                    state.discordReady
+                        ? "سجّل الدخول لربط حسابك بالموقع."
+                        : "سجّل Discord بعد تفعيل Discord OAuth في Supabase.",
+                    "info"
+                );
             }
 
-            state.client.auth.onAuthStateChange(async (_event, session) => {
+            state.client.auth.onAuthStateChange((_event, session) => {
                 if (session?.user) {
                     renderUser(session.user);
-                    await loadProfile(session.user);
+                    void loadProfile(session.user);
                 } else {
                     renderLoggedOut();
                 }
