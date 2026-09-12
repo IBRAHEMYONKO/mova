@@ -47,7 +47,7 @@ test("AniList Korean webtoon receives the manhwa taxonomy", () => {
         streamingEpisodes: []
     });
 
-    assert.equal(item.id, "anilist-manga-502");
+    assert.equal(item.id, "anilist-manhwa-502");
     assert.equal(item.type, "manhwa");
     assert.equal(item.chapterTotal, 80);
 });
@@ -66,7 +66,7 @@ test("AniList novel receives a stable novel taxonomy", () => {
         streamingEpisodes: []
     });
 
-    assert.equal(item.id, "anilist-manga-503");
+    assert.equal(item.id, "anilist-novel-503");
     assert.equal(item.type, "novel");
     assert.equal(item.chapterTotal, 30);
     assert.equal(item.volumes, 4);
