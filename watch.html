@@ -7,34 +7,234 @@
 <title>IRAQ EMPIRE CINEMA</title>
 <link rel="stylesheet" href="/style.css">
 <style>
-.watch-page{max-width:1240px;margin:auto;padding:34px 20px 80px}.watch-hero{position:relative;overflow:hidden;min-height:390px;border:1px solid rgba(255,255,255,.08);border-radius:26px;background:#0b0b0b}.watch-backdrop{position:absolute;inset:0;background-size:cover;background-position:center;opacity:.28}.watch-backdrop:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#070707 5%,rgba(7,7,7,.82) 45%,rgba(7,7,7,.28))}.watch-content{position:relative;z-index:1;display:flex;align-items:flex-end;gap:28px;padding:36px;min-height:390px;box-sizing:border-box}.watch-poster{width:210px;min-width:210px;aspect-ratio:2/3;border-radius:18px;overflow:hidden;background:#151515;border:1px solid rgba(255,255,255,.1)}.watch-poster img{width:100%;height:100%;object-fit:cover}.watch-copy{max-width:760px}.watch-kicker{color:#c59b4b;font-size:11px;font-weight:900;letter-spacing:2px}.watch-copy h1{font-size:42px;margin:8px 0}.watch-overview{color:#aaa;line-height:1.9;max-width:720px}.watch-meta{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0}.watch-pill{padding:7px 11px;border:1px solid rgba(255,255,255,.1);border-radius:999px;background:#111;color:#ccc;font-size:12px}.watch-actions{display:flex;gap:9px;flex-wrap:wrap}.watch-btn{border:0;border-radius:11px;padding:11px 17px;background:#bd964e;color:#080808;font-weight:900;cursor:pointer;text-decoration:none;display:inline-flex}.watch-btn.secondary{background:#171717;color:#ddd;border:1px solid rgba(255,255,255,.1)}.watch-btn:disabled{opacity:.45;cursor:not-allowed}.watch-section{margin-top:28px;padding:24px;border:1px solid rgba(255,255,255,.08);border-radius:20px;background:#0b0b0b}.watch-section h2{margin:0 0 8px}.watch-muted{color:#888;line-height:1.8}.season-tabs,.episode-grid,.chapter-grid,.provider-grid{display:flex;flex-wrap:wrap;gap:9px;margin-top:16px}.season-btn,.episode-btn,.chapter-btn,.provider-btn{border:1px solid rgba(255,255,255,.1);background:#151515;color:#ddd;border-radius:10px;padding:10px 13px;cursor:pointer;text-decoration:none}.season-btn.active,.episode-btn.active{background:#bd964e;color:#080808}.episode-btn{display:flex;flex-direction:column;align-items:flex-start;min-width:160px;text-align:right}.episode-btn small{color:#777;margin-top:4px}.episode-btn.active small{color:#333}.episode-btn.unavailable{opacity:.58}.player{margin-top:28px;border-radius:20px;overflow:hidden;background:#000;border:1px solid rgba(255,255,255,.1)}.player-head{padding:14px 18px;background:#101010;display:flex;justify-content:space-between;gap:12px}.player-body{min-height:430px;display:grid;place-items:center;color:#777}.player-body video,.player-body iframe{width:100%;height:430px;border:0}.provider-card{display:flex;gap:10px;align-items:center;text-decoration:none;color:#ddd}.chapter-stat{font-size:30px;font-weight:900;color:#c39a4e}.hidden{display:none!important}@media(max-width:750px){.watch-content{align-items:flex-start;flex-direction:column;padding:22px}.watch-poster{width:150px;min-width:150px}.watch-copy h1{font-size:30px}.watch-hero,.watch-content{min-height:0}.player-body,.player-body video,.player-body iframe{height:280px;min-height:280px}}
+.watch-page{max-width:1240px;margin:auto;padding:34px 20px 80px}.watch-hero{position:relative;overflow:hidden;min-height:390px;border:1px solid rgba(255,255,255,.08);border-radius:26px;background:#0b0b0b}.watch-backdrop{position:absolute;inset:0;background-size:cover;background-position:center;opacity:.28}.watch-backdrop:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#070707 5%,rgba(7,7,7,.82) 45%,rgba(7,7,7,.28))}.watch-content{position:relative;z-index:1;display:flex;align-items:flex-end;gap:28px;padding:36px;min-height:390px;box-sizing:border-box}.watch-poster{width:210px;min-width:210px;aspect-ratio:2/3;border-radius:18px;overflow:hidden;background:#151515;border:1px solid rgba(255,255,255,.1)}.watch-poster img{width:100%;height:100%;object-fit:cover}.watch-copy{max-width:760px}.watch-kicker{color:#c59b4b;font-size:11px;font-weight:900;letter-spacing:2px}.watch-copy h1{font-size:42px;margin:8px 0}.watch-overview{color:#aaa;line-height:1.9;max-width:720px}.watch-meta{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0}.watch-pill{padding:7px 11px;border:1px solid rgba(255,255,255,.1);border-radius:999px;background:#111;color:#ccc;font-size:12px}.watch-actions{display:flex;gap:9px;flex-wrap:wrap}.watch-btn{border:0;border-radius:11px;padding:11px 17px;background:#bd964e;color:#080808;font-weight:900;cursor:pointer;text-decoration:none;display:inline-flex}.watch-btn.secondary{background:#171717;color:#ddd;border:1px solid rgba(255,255,255,.1)}.watch-btn:disabled{opacity:.45;cursor:not-allowed}.watch-section{margin-top:28px;padding:24px;border:1px solid rgba(255,255,255,.08);border-radius:20px;background:#0b0b0b}.watch-section h2{margin:0 0 8px}.watch-muted{color:#888;line-height:1.8}.season-tabs,.episode-grid,.chapter-grid,.provider-grid{display:flex;flex-wrap:wrap;gap:9px;margin-top:16px}.season-btn,.episode-btn,.chapter-btn,.provider-btn{border:1px solid rgba(255,255,255,.1);background:#151515;color:#ddd;border-radius:10px;padding:10px 13px;cursor:pointer;text-decoration:none}.season-btn.active,.episode-btn.active{background:#bd964e;color:#080808}.episode-btn{display:flex;flex-direction:column;align-items:flex-start;min-width:160px;text-align:right}.episode-btn small{color:#777;margin-top:4px}.episode-btn.active small{color:#333}.episode-btn.unavailable{opacity:.58}.episode-btn.provider{border-color:rgba(197,155,75,.35)}.player{margin-top:28px;border-radius:20px;overflow:hidden;background:#000;border:1px solid rgba(255,255,255,.1)}.player-head{padding:14px 18px;background:#101010;display:flex;justify-content:space-between;gap:12px}.player-body{min-height:430px;display:grid;place-items:center;color:#777}.player-body video,.player-body iframe{width:100%;height:430px;border:0}.provider-card{display:flex;gap:10px;align-items:center;text-decoration:none;color:#ddd}.chapter-stat{font-size:30px;font-weight:900;color:#c39a4e}.chapter-grid .chapter-unavailable{opacity:.5;cursor:default}.error-box{padding:18px;border:1px solid rgba(190,90,90,.3);border-radius:14px;background:rgba(120,40,40,.08);color:#d8b0b0}.hidden{display:none!important}@media(max-width:750px){.watch-content{align-items:flex-start;flex-direction:column;padding:22px}.watch-poster{width:150px;min-width:150px}.watch-copy h1{font-size:30px}.watch-hero,.watch-content{min-height:0}.player-body,.player-body video,.player-body iframe{height:280px;min-height:280px}}
 </style>
 </head>
 <body>
 <main class="watch-page">
 <a href="/" class="text-link">← العودة إلى الرئيسية</a>
-<section class="watch-hero" id="hero"><div class="watch-backdrop" id="backdrop"></div><div class="watch-content"><div class="watch-poster" id="poster"></div><div class="watch-copy"><div class="watch-kicker" id="type">IRAQ EMPIRE CINEMA</div><h1 id="title">جاري التحميل...</h1><div class="watch-meta" id="meta"></div><p class="watch-overview" id="overview">جاري تجهيز بيانات العمل...</p><div class="watch-actions"><button class="watch-btn" id="direct" hidden>مشاهدة الآن</button><button class="watch-btn secondary" id="favoriteButton" type="button">♡ المفضلة</button></div></div></div></section>
+<section class="watch-hero" id="hero">
+    <div class="watch-backdrop" id="backdrop"></div>
+    <div class="watch-content">
+        <div class="watch-poster" id="poster"></div>
+        <div class="watch-copy">
+            <div class="watch-kicker" id="type">IRAQ EMPIRE CINEMA</div>
+            <h1 id="title">جاري التحميل...</h1>
+            <div class="watch-meta" id="meta"></div>
+            <p class="watch-overview" id="overview">جاري تجهيز بيانات العمل...</p>
+            <div class="watch-actions">
+                <button class="watch-btn" id="direct" hidden>مشاهدة الآن</button>
+                <button class="watch-btn secondary" id="favoriteButton" type="button">♡ المفضلة</button>
+            </div>
+        </div>
+    </div>
+</section>
 <section class="watch-section" id="player" hidden><div class="player-head"><strong id="playerTitle">المشغل</strong><span id="playerInfo"></span></div><div class="player-body" id="playerBody">اختر حلقة أو مصدراً للتشغيل.</div><div class="watch-actions" style="padding-top:12px"><button class="watch-btn secondary" id="prevEpisode" disabled>← السابقة</button><button class="watch-btn secondary" id="nextEpisode" disabled>التالية →</button></div></section>
 <section class="watch-section" id="seasonSection" hidden><h2>المواسم والحلقات</h2><p class="watch-muted" id="seasonSummary"></p><div class="season-tabs" id="seasons"></div><div class="episode-grid" id="episodes"></div></section>
-<section class="watch-section" id="chapterSection" hidden><h2>الفصول والقراءة</h2><div id="chapterStats"></div><div class="chapter-grid" id="chapters"></div><p class="watch-muted" id="chapterNote"></p></section>
+<section class="watch-section" id="chapterSection" hidden><h2 id="chapterHeading">الفصول والقراءة</h2><div id="chapterStats"></div><div class="chapter-grid" id="chapters"></div><p class="watch-muted" id="chapterNote"></p></section>
 <section class="watch-section" id="providerSection" hidden><h2>المشاهدة والقراءة الرسمية</h2><p class="watch-muted">هذه روابط خارجية مرتبطة بالعمل. لا نعاملها كمشغل داخلي.</p><div class="provider-grid" id="providers"></div></section>
 <section class="watch-section" id="empty" hidden><h2>لا يوجد تشغيل مباشر</h2><p class="watch-muted">بيانات العمل موجودة، لكن لا يوجد مصدر تشغيل مباشر صالح حاليًا. ستظهر الروابط الرسمية إن كانت متاحة.</p></section>
+<section class="watch-section" id="errorSection" hidden><div class="error-box"><h2>تعذر تحميل المحتوى</h2><p class="watch-muted" id="errorMessage"></p><button class="watch-btn" id="retryButton" type="button">إعادة المحاولة</button></div></section>
 </main>
 <script>
 "use strict";
 (() => {
-const $=id=>document.getElementById(id);const params=new URLSearchParams(location.search);const id=(params.get("id")||"").trim();let data=null,currentSeason=0,currentEpisode=0;
-const esc=v=>String(v??"").replace(/[&<>\"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[c]));
-const playable=s=>Array.isArray(s)?s.filter(x=>x&&x.url&&x.kind!=="provider"&&x.playable!==false):[];const providers=s=>Array.isArray(s)?s.filter(x=>x&&x.url&&x.kind==="provider"):[];const show=(el,yes=true)=>el.hidden=!yes;
-const typeName=t=>({movie:"فيلم",series:"مسلسل",tv:"مسلسل",anime:"أنمي",manga:"مانغا",manhwa:"مانهوا"}[t]||"محتوى");
-function setPlayer(source,title,ref){if(!source?.url)return;show($("player"));$("playerTitle").textContent=title||"المشغل";$("playerInfo").textContent=source.name||"مصدر";const body=$("playerBody");body.innerHTML="";window.__IRAQ_CINEMA_EPISODE__=ref||null;const url=source.url;if(source.embed===true||/\.(mp4|webm|ogg)(?:$|[?#])/i.test(url)){const v=document.createElement("video");v.controls=true;v.playsInline=true;v.preload="metadata";v.src=url;body.appendChild(v)}else{const iframe=document.createElement("iframe");iframe.src=url;iframe.allow="autoplay; fullscreen; picture-in-picture";iframe.allowFullscreen=true;body.appendChild(iframe)}$("player").scrollIntoView({behavior:"smooth",block:"start"})}
-function renderEpisodes(){const seasons=data?.watch?.seasons||[];show($("seasonSection"),seasons.length>0);if(!seasons.length)return;if(!seasons[currentSeason])currentSeason=0;const tabs=$("seasons"),grid=$("episodes"),season=seasons[currentSeason];tabs.innerHTML=seasons.map((s,i)=>`<button class="season-btn ${i===currentSeason?"active":""}" data-season="${i}">${esc(s.title||`الموسم ${s.number}`)} <small>(${s.episodeCount||s.episodes.length})</small></button>`).join("");tabs.querySelectorAll("[data-season]").forEach(b=>b.onclick=()=>{currentSeason=Number(b.dataset.season);currentEpisode=0;renderEpisodes()});$("seasonSummary").textContent=`${season.episodeCount||season.episodes.length} حلقة • ${season.playableEpisodeCount||0} تشغيل مباشر • ${season.providerEpisodeCount||0} روابط رسمية`;
-grid.innerHTML=season.episodes.map((e,i)=>{const direct=playable(e.sources)[0],ext=providers(e.sources)[0];return `<button class="episode-btn ${i===currentEpisode?"active":""} ${!direct&&!ext?"unavailable":""}" data-episode="${i}"><b>الحلقة ${e.number}</b><span>${esc(e.title||"")}</span><small>${direct?"تشغيل مباشر":ext?`مشاهدة عبر ${esc(ext.name)}`:"المصدر غير متوفر حاليًا"}</small></button>`}).join("");grid.querySelectorAll("[data-episode]").forEach(b=>b.onclick=()=>{currentEpisode=Number(b.dataset.episode);const e=season.episodes[currentEpisode],direct=playable(e.sources)[0],ext=providers(e.sources)[0];renderEpisodes();if(direct)setPlayer(direct,e.title,{season:season.number,index:e.number});else if(ext)window.open(ext.url,"_blank","noopener,noreferrer")});$("prevEpisode").disabled=currentEpisode<=0;$("nextEpisode").disabled=currentEpisode>=season.episodes.length-1)}
-function renderChapters(){const item=data.item||{},chapters=data.watch?.chapters||[],total=Number(data.meta?.chapterTotal||item.chapters||0),isManga=item.type==="manga"||item.type==="manhwa";show($("chapterSection"),isManga);if(!isManga)return;$("chapterStats").innerHTML=`<div class="chapter-stat">${total||chapters.length||0}</div><div class="watch-muted">فصل موثق في بيانات العمل${chapters.length?` • ${chapters.length} فصل متاح الآن`:""}</div>`;$("chapters").innerHTML=chapters.length?chapters.map(c=>{const p=playable(c.sources)[0],x=providers(c.sources)[0];return p?`<button class="chapter-btn" data-source="${esc(p.url)}">الفصل ${c.number}</button>`:x?`<a class="chapter-btn" target="_blank" rel="noopener noreferrer" href="${esc(x.url)}">الفصل ${c.number} عبر ${esc(x.name)}</a>`:`<span class="chapter-btn" style="opacity:.5">الفصل ${c.number} غير متاح</span>`}).join(""):"";$("chapterNote").textContent=(data.officialLinks||[]).length?"يمكن فتح مواقع القراءة الرسمية من قسم المصادر أدناه.":"لا توجد حاليًا بيانات فصلية مباشرة أو رابط قراءة رسمي في البيانات المتاحة."}
-function renderProviders(){const list=[];for(const p of data.providers||[]){if(p?.link)list.push({name:p.name||"مزود",url:p.link})}for(const p of data.officialLinks||[])list.push(p);for(const p of data.providerEpisodeLinks||[])list.push({name:`${p.name} — الحلقة ${p.episodeNumber}`,url:p.url});const seen=new Set(),unique=list.filter(p=>p?.url&&!seen.has(p.url)&&seen.add(p.url));show($("providerSection"),unique.length>0);$("providers").innerHTML=unique.slice(0,24).map(p=>`<a class="provider-btn provider-card" target="_blank" rel="noopener noreferrer" href="${esc(p.url)}">↗ <b>${esc(p.name||"المصدر الرسمي")}</b></a>`).join("")}
-function updateFavorite(){const key=`iraq-empire-cinema:favorite:${encodeURIComponent(id)}`,active=localStorage.getItem(key)==="1";$("favoriteButton").textContent=active?"♥ في المفضلة":"♡ المفضلة";$("favoriteButton").onclick=()=>{localStorage.setItem(key,active?"0":"1");updateFavorite()}}
-async function init(){if(!id){location.href="/";return}try{const r=await fetch(`/api/title?id=${encodeURIComponent(id)}&region=IQ`,{cache:"no-store"});data=await r.json();if(!r.ok||!data.success)throw Error(data.error||"error");const item=data.item||{};document.title=`${item.title||"IRAQ EMPIRE CINEMA"} | عراق إمباير سينما`;$('title').textContent=item.title||"بدون عنوان";$("type").textContent=`IRAQ EMPIRE • ${typeName(item.type)}`;$("overview").textContent=item.overview||"لا يوجد وصف متاح لهذا العمل.";$("meta").innerHTML=[item.year,item.rating?`★ ${Number(item.rating).toFixed(1)}`:null,typeName(item.type),item.episodes?`${item.episodes} حلقة`:null,item.chapters?`${item.chapters} فصل`:null,item.volumes?`${item.volumes} مجلد`:null].filter(Boolean).map(x=>`<span class="watch-pill">${esc(x)}</span>`).join("");if(item.poster)$("poster").innerHTML=`<img src="${esc(item.poster)}" alt="${esc(item.title)}">`;if(item.backdrop)$("backdrop").style.backgroundImage=`url("${String(item.backdrop).replace(/\"/g,"\\\"")}")`;const direct=playable(data.watch?.movie)[0];if(direct){show($("direct"));$("direct").onclick=()=>setPlayer(direct,item.title,{season:null,index:null})}renderEpisodes();renderChapters();renderProviders();updateFavorite();show($("empty"),!data.watch?.available&&!data.providers?.length&&!data.officialLinks?.length&&!data.providerEpisodeLinks?.length)}catch(error){$("title").textContent="تعذر تحميل المحتوى";$("overview").textContent=error.message||"حدث خطأ غير متوقع."}}
-$("prevEpisode").onclick=()=>{if(currentEpisode>0){currentEpisode--;const s=data.watch.seasons[currentSeason],e=s.episodes[currentEpisode],p=playable(e.sources)[0];renderEpisodes();if(p)setPlayer(p,e.title,{season:s.number,index:e.number})}};$("nextEpisode").onclick=()=>{const s=data.watch?.seasons?.[currentSeason];if(s&&currentEpisode<s.episodes.length-1){currentEpisode++;const e=s.episodes[currentEpisode],p=playable(e.sources)[0];renderEpisodes();if(p)setPlayer(p,e.title,{season:s.number,index:e.number})}};init();
+    const $ = id => document.getElementById(id);
+    const params = new URLSearchParams(location.search);
+    const id = (params.get("id") || "").trim();
+    const FETCH_TIMEOUT = 14000;
+    let data = null;
+    let currentSeason = 0;
+    let currentEpisode = 0;
+
+    const esc = value => String(value ?? "").replace(/[&<>\"']/g, char => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", "\"":"&quot;", "'":"&#039;" }[char]));
+    const playable = sources => Array.isArray(sources) ? sources.filter(source => source && source.url && source.kind !== "provider" && source.playable !== false) : [];
+    const providers = sources => Array.isArray(sources) ? sources.filter(source => source && source.url && source.kind === "provider") : [];
+    const show = (element, visible = true) => { if (element) element.hidden = !visible; };
+    const typeName = type => ({ movie:"فيلم", series:"مسلسل", tv:"مسلسل", anime:"أنمي", manga:"مانغا", manhwa:"مانهوا", novel:"رواية" }[type] || "محتوى");
+
+    function setPlayer(source, title, ref) {
+        if (!source?.url) return;
+        show($("player"));
+        $("playerTitle").textContent = title || "المشغل";
+        $("playerInfo").textContent = source.name || "مصدر";
+        const body = $("playerBody");
+        body.innerHTML = "";
+        window.__IRAQ_CINEMA_EPISODE__ = ref || null;
+        const url = source.url;
+        if (source.embed === true || /\.(mp4|webm|ogg)(?:$|[?#])/i.test(url)) {
+            const video = document.createElement("video");
+            video.controls = true;
+            video.playsInline = true;
+            video.preload = "metadata";
+            video.src = url;
+            body.appendChild(video);
+        } else {
+            const iframe = document.createElement("iframe");
+            iframe.src = url;
+            iframe.allow = "autoplay; fullscreen; picture-in-picture";
+            iframe.allowFullscreen = true;
+            body.appendChild(iframe);
+        }
+        $("player").scrollIntoView({ behavior:"smooth", block:"start" });
+    }
+
+    function renderEpisodes() {
+        const seasons = data?.watch?.seasons || [];
+        show($("seasonSection"), seasons.length > 0);
+        if (!seasons.length) return;
+        if (!seasons[currentSeason]) currentSeason = 0;
+        const tabs = $("seasons"), grid = $("episodes"), season = seasons[currentSeason];
+        const episodes = Array.isArray(season.episodes) ? season.episodes : [];
+        tabs.innerHTML = seasons.map((seasonItem, index) => `<button class="season-btn ${index === currentSeason ? "active" : ""}" data-season="${index}">${esc(seasonItem.title || `الموسم ${seasonItem.number}`)} <small>(${Number(seasonItem.episodeCount || seasonItem.episodes?.length || 0)})</small></button>`).join("");
+        tabs.querySelectorAll("[data-season]").forEach(button => button.onclick = () => { currentSeason = Number(button.dataset.season); currentEpisode = 0; renderEpisodes(); });
+        $("seasonSummary").textContent = `${episodes.length} حلقة • ${Number(season.playableEpisodeCount || 0)} تشغيل مباشر • ${Number(season.providerEpisodeCount || 0)} روابط رسمية`;
+        grid.innerHTML = episodes.map((episode, index) => {
+            const direct = playable(episode.sources)[0];
+            const external = providers(episode.sources)[0];
+            const label = direct ? "تشغيل مباشر" : external ? `مشاهدة عبر ${external.name}` : "المصدر غير متوفر حاليًا";
+            return `<button class="episode-btn ${index === currentEpisode ? "active" : ""} ${!direct && !external ? "unavailable" : ""} ${external && !direct ? "provider" : ""}" data-episode="${index}"><b>الحلقة ${Number(episode.number)}</b><span>${esc(episode.title || "")}</span><small>${esc(label)}</small></button>`;
+        }).join("");
+        grid.querySelectorAll("[data-episode]").forEach(button => button.onclick = () => {
+            currentEpisode = Number(button.dataset.episode);
+            const episode = episodes[currentEpisode];
+            const direct = playable(episode?.sources)[0];
+            const external = providers(episode?.sources)[0];
+            renderEpisodes();
+            if (direct) setPlayer(direct, episode.title, { season:season.number, index:episode.number, id:episode.id });
+            else if (external) window.open(external.url, "_blank", "noopener,noreferrer");
+        });
+        $("prevEpisode").disabled = currentEpisode <= 0;
+        $("nextEpisode").disabled = currentEpisode >= episodes.length - 1;
+    }
+
+    function renderChapters() {
+        const item = data?.item || {};
+        const chapters = Array.isArray(data?.watch?.chapters) ? data.watch.chapters : [];
+        const total = Number(data?.meta?.chapterTotal ?? item.chapterTotal ?? item.chapters ?? chapters.length ?? 0);
+        const isReadingType = ["manga", "manhwa", "novel"].includes(item.type);
+        show($("chapterSection"), isReadingType);
+        if (!isReadingType) return;
+        const volumeCount = Number(data?.meta?.volumeCount || item.volumes || 0);
+        $("chapterStats").innerHTML = `<div class="chapter-stat">${total || chapters.length || 0}</div><div class="watch-muted">${item.type === "novel" ? "فصل موثق في بيانات الرواية" : "فصل موثق في بيانات العمل"}${volumeCount ? ` • ${volumeCount} مجلد` : ""}${chapters.length ? ` • ${chapters.length} فصل متاح الآن` : ""}</div>`;
+        $("chapters").innerHTML = chapters.length ? chapters.map(chapter => {
+            const direct = playable(chapter.sources)[0];
+            const external = providers(chapter.sources)[0];
+            if (direct) return `<button class="chapter-btn" data-chapter-source="${esc(direct.url)}">الفصل ${Number(chapter.number)}</button>`;
+            if (external) return `<a class="chapter-btn" target="_blank" rel="noopener noreferrer" href="${esc(external.url)}">الفصل ${Number(chapter.number)} عبر ${esc(external.name)}</a>`;
+            return `<span class="chapter-btn chapter-unavailable">الفصل ${Number(chapter.number)} غير متاح</span>`;
+        }).join("") : "";
+        $("chapters").querySelectorAll("[data-chapter-source]").forEach(button => button.onclick = () => {
+            const source = button.dataset.chapterSource;
+            if (!source) return;
+            $("playerBody").innerHTML = `<iframe src="${esc(source)}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
+            $("playerTitle").textContent = button.textContent;
+            $("playerInfo").textContent = "قراءة مباشرة";
+            show($("player"));
+            $("player").scrollIntoView({ behavior:"smooth", block:"start" });
+        });
+        $("chapterNote").textContent = (data?.officialLinks || []).length ? "يمكن فتح مواقع القراءة الرسمية من قسم المصادر أدناه. لا نضيف فصولًا أو روابط غير موجودة في البيانات الحقيقية." : "لا توجد حاليًا بيانات فصلية مباشرة أو رابط قراءة رسمي في البيانات المتاحة.";
+    }
+
+    function renderProviders() {
+        const list = [];
+        for (const provider of data?.providers || []) if (provider?.link) list.push({ name:provider.name || "مزود", url:provider.link });
+        for (const link of data?.officialLinks || []) list.push(link);
+        for (const link of data?.providerEpisodeLinks || []) list.push({ name:`${link.name} — الحلقة ${link.episodeNumber}`, url:link.url });
+        const seen = new Set();
+        const unique = list.filter(provider => provider?.url && !seen.has(provider.url) && seen.add(provider.url));
+        show($("providerSection"), unique.length > 0);
+        $("providers").innerHTML = unique.slice(0, 24).map(provider => `<a class="provider-btn provider-card" target="_blank" rel="noopener noreferrer" href="${esc(provider.url)}">↗ <b>${esc(provider.name || "المصدر الرسمي")}</b></a>`).join("");
+    }
+
+    function updateFavorite() {
+        const key = `iraq-empire-cinema:favorite:${encodeURIComponent(id)}`;
+        const active = localStorage.getItem(key) === "1";
+        $("favoriteButton").textContent = active ? "♥ في المفضلة" : "♡ المفضلة";
+        $("favoriteButton").onclick = () => {
+            localStorage.setItem(key, active ? "0" : "1");
+            updateFavorite();
+            window.dispatchEvent(new CustomEvent("iraq-cinema-favorites-changed", { detail:{ id, active:!active } }));
+        };
+    }
+
+    function showLoadError(message) {
+        $("title").textContent = "تعذر تحميل المحتوى";
+        $("overview").textContent = "يمكنك إعادة المحاولة دون مغادرة الصفحة.";
+        $("errorMessage").textContent = message || "حدث خطأ غير متوقع أثناء تحميل بيانات العمل.";
+        show($("errorSection"));
+    }
+
+    async function fetchTitle() {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
+        try {
+            const response = await fetch(`/api/title?id=${encodeURIComponent(id)}&region=IQ`, { cache:"no-store", signal:controller.signal, headers:{ Accept:"application/json" } });
+            const payload = await response.json().catch(() => null);
+            if (!response.ok || !payload?.success) throw new Error(payload?.error || `HTTP ${response.status}`);
+            return payload;
+        } finally {
+            clearTimeout(timer);
+        }
+    }
+
+    function renderItem() {
+        const item = data.item || {};
+        document.title = `${item.title || "IRAQ EMPIRE CINEMA"} | عراق إمباير سينما`;
+        $("title").textContent = item.title || "بدون عنوان";
+        $("type").textContent = `IRAQ EMPIRE • ${typeName(item.type)}`;
+        $("overview").textContent = item.overview || "لا يوجد وصف متاح لهذا العمل.";
+        const chapterCount = Number(data.meta?.chapterTotal ?? item.chapterTotal ?? item.chapters ?? 0);
+        $("meta").innerHTML = [item.year, item.rating ? `★ ${Number(item.rating).toFixed(1)}` : null, typeName(item.type), item.episodes ? `${item.episodes} حلقة` : null, chapterCount ? `${chapterCount} فصل` : null, item.volumes ? `${item.volumes} مجلد` : null, item.status || null].filter(Boolean).map(value => `<span class="watch-pill">${esc(value)}</span>`).join("");
+        if (item.poster) $("poster").innerHTML = `<img src="${esc(item.poster)}" alt="${esc(item.title)}">`;
+        if (item.backdrop) $("backdrop").style.backgroundImage = `url("${String(item.backdrop).replace(/\"/g, "\\\"")}")`;
+        const direct = playable(data.watch?.movie)[0];
+        if (direct) { show($("direct")); $("direct").onclick = () => setPlayer(direct, item.title, { season:null, index:null, id:item.id }); }
+        renderEpisodes();
+        renderChapters();
+        renderProviders();
+        updateFavorite();
+        const hasExternal = Boolean((data.providers || []).length || (data.officialLinks || []).length || (data.providerEpisodeLinks || []).length);
+        show($("empty"), !data.watch?.available && !hasExternal && !data.watch?.seasons?.length && !data.watch?.chapters?.length);
+        show($("errorSection"), false);
+    }
+
+    async function init() {
+        if (!id) { location.href = "/"; return; }
+        show($("errorSection"), false);
+        $("retryButton").onclick = init;
+        try {
+            data = await fetchTitle();
+            currentSeason = 0;
+            currentEpisode = 0;
+            renderItem();
+        } catch (error) {
+            const message = error?.name === "AbortError" ? "انتهت مهلة الاتصال بالخادم. تحقق من الاتصال ثم اضغط إعادة المحاولة." : (error?.message || "حدث خطأ غير متوقع أثناء تحميل المحتوى.");
+            showLoadError(message);
+        }
+    }
+
+    $("prevEpisode").onclick = () => {
+        if (currentEpisode <= 0) return;
+        currentEpisode--;
+        const season = data?.watch?.seasons?.[currentSeason];
+        const episode = season?.episodes?.[currentEpisode];
+        const source = playable(episode?.sources)[0];
+        renderEpisodes();
+        if (source) setPlayer(source, episode.title, { season:season.number, index:episode.number, id:episode.id });
+    };
+
+    $("nextEpisode").onclick = () => {
+        const season = data?.watch?.seasons?.[currentSeason];
+        if (!season || currentEpisode >= season.episodes.length - 1) return;
+        currentEpisode++;
+        const episode = season.episodes[currentEpisode];
+        const source = playable(episode?.sources)[0];
+        renderEpisodes();
+        if (source) setPlayer(source, episode.title, { season:season.number, index:episode.number, id:episode.id });
+    };
+
+    init();
 })();
 </script>
 </body>
