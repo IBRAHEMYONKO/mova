@@ -2,8 +2,8 @@
 
 const { getCatalog } = require("../lib/catalog");
 const { getWatchProviders } = require("../lib/tmdb-providers");
-const { enrichProviders } = require("../lib/provider-enrichment");
 const { getOfficialProviders } = require("../lib/official-providers");
+const { enrichProviders } = require("../lib/provider-enrichment");
 
 function findItem(catalog, id) {
     const wanted = String(id || "").trim();
