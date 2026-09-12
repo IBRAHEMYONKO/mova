@@ -31,6 +31,7 @@ jobs:
       - run: node --check index.js
       - run: node --test test/anilist-media.test.js
       - run: node --test test/catalog-media-types.test.js
+      - run: node --test test/catalog-media-api.test.js
       - run: node --test test/index-account.test.js
       - run: node --test test/home-recovery.test.js
       - run: node --test test/watch-model.test.js
