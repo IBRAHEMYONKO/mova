@@ -24,4 +24,36 @@ jobs:
       - run: node --check media-sections.js
       - run: node --check favorite-sync.js
       - run: node --check index.js
-      - run: node --test
+      - run: node --test test/watch-model.test.js
+      - run: node --test test/watch-response.test.js
+      - run: node --test test/home-page.test.js
+      - run: node --test test/episode-model.test.js
+      - run: node --test test/watch-page.test.js
+      - run: node --test test/watch-navigation.test.js
+      - run: node --test test/watch-navigation-cross-season.test.js
+      - run: node --test test/watch-progress.test.js
+      - run: node --test test/watch-progress-ui.test.js
+      - run: node --test test/watch-progress-video.test.js
+      - run: node --test test/watch-provider-ui.test.js
+      - run: node --test test/watch-page-provider-script.test.js
+      - run: node --test test/watch-link.test.js
+      - run: node --test test/tmdb-watch.test.js
+      - run: node --test test/tmdb-provider-links.test.js
+      - run: node --test test/providers-api-shape.test.js
+      - run: node --test test/provider-enrichment.test.js
+      - run: node --test test/provider-directory.test.js
+      - run: node --test test/official-providers.test.js
+      - run: node --test test/continue-watching.test.js
+      - run: node --test test/my-list.test.js
+      - run: node --test test/my-list-page.test.js
+      - run: node --test test/my-list-ui.test.js
+      - run: node --test test/cloud-library-sync.test.js
+      - run: node --test test/community.test.js
+      - run: node --test test/community-notifications.test.js
+      - run: node --test test/community-service.test.js
+      - run: node --test test/community-schema.test.js
+      - run: node --test test/community-upgrade.test.js
+      - run: node --test test/community-ui.test.js
+      - run: node --test test/moderation.test.js
+      - run: node --test test/schema-security.test.js
+      - run: node --test test/supabase-config.test.js
