@@ -15,7 +15,7 @@
         const image = poster(item);
         const title = escapeHtml(item.title || item.originalTitle || "بدون عنوان");
         const year = item.year ? escapeHtml(item.year) : "—";
-        const chapters = Number(item.chapters || 0);
+        const chapters = Number(item.chapterTotal ?? (Array.isArray(item.chapters) ? item.chapters.length : item.chapters) ?? 0);
         const rating = Number(item.rating || 0);
 
         return `
