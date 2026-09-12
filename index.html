@@ -7,20 +7,25 @@
 
     <meta
         name="viewport"
-        content="width=device-width,initial-scale=1"
+        content="width=device-width, initial-scale=1"
     >
 
     <meta
         name="theme-color"
-        content="#090a0f"
+        content="#070707"
     >
 
     <meta
         name="description"
-        content="IRAQ EMPIRE CINEMA — مكتبة سينمائية تتحدث تلقائياً"
+        content="IRAQ EMPIRE CINEMA — عراق إمباير سينما، مكتبة الأفلام والمسلسلات والأنمي"
     >
 
-    <title>IRAQ EMPIRE CINEMA</title>
+    <meta
+        name="color-scheme"
+        content="dark"
+    >
+
+    <title>IRAQ EMPIRE CINEMA | عراق إمباير سينما</title>
 
     <link
         rel="stylesheet"
@@ -29,13 +34,22 @@
 
 </head>
 
+
 <body>
+
+    <!-- =========================================
+         BACKGROUND
+    ========================================== -->
 
     <div class="noise"></div>
 
     <div class="page-glow glow-a"></div>
     <div class="page-glow glow-b"></div>
 
+
+    <!-- =========================================
+         TOPBAR
+    ========================================== -->
 
     <header
         class="topbar"
@@ -45,13 +59,14 @@
         <a
             class="brand"
             href="#home"
+            aria-label="عراق إمباير سينما"
         >
 
             <span class="brand-mark">
                 IE
             </span>
 
-            <span>
+            <span class="brand-text">
 
                 <b>
                     IRAQ EMPIRE
@@ -61,6 +76,10 @@
                     CINEMA
                 </small>
 
+                <em>
+                    عراق إمباير سينما
+                </em>
+
             </span>
 
         </a>
@@ -69,6 +88,7 @@
         <nav
             class="nav"
             id="nav"
+            aria-label="التنقل الرئيسي"
         >
 
             <a
@@ -83,6 +103,20 @@
                 href="#movies"
             >
                 الأفلام
+            </a>
+
+            <a
+                class="nav-link"
+                href="#series"
+            >
+                المسلسلات
+            </a>
+
+            <a
+                class="nav-link"
+                href="#anime"
+            >
+                الأنمي
             </a>
 
             <a
@@ -105,6 +139,8 @@
         <button
             class="icon-btn"
             id="openSearch"
+            type="button"
+            aria-label="البحث"
         >
             ⌕
         </button>
@@ -112,10 +148,16 @@
     </header>
 
 
+    <!-- =========================================
+         MAIN
+    ========================================== -->
+
     <main>
 
 
-        <!-- HERO -->
+        <!-- =====================================
+             HERO
+        ====================================== -->
 
         <section
             class="hero"
@@ -148,9 +190,9 @@
 
                 <p>
 
-                    اكتشف أحدث الأفلام،
-                    الأعلى تقييماً والأكثر شعبية
-                    في مكتبة تتحدث تلقائياً.
+                    اكتشف أحدث الأفلام والمسلسلات والأنمي،
+                    الأعلى تقييماً والأكثر شعبية في مكتبة
+                    سينمائية تتحدث تلقائياً.
 
                 </p>
 
@@ -174,16 +216,20 @@
                     <button
                         class="btn btn-ghost"
                         id="heroSearch"
+                        type="button"
                     >
 
-                        ابحث عن فيلم
+                        ابحث الآن
 
                     </button>
 
                 </div>
 
 
+                <!-- إحصائيات الموقع -->
+
                 <div class="hero-stats">
+
 
                     <div>
 
@@ -193,6 +239,32 @@
 
                         <span>
                             فيلم
+                        </span>
+
+                    </div>
+
+
+                    <div>
+
+                        <b id="seriesCount">
+                            —
+                        </b>
+
+                        <span>
+                            مسلسل
+                        </span>
+
+                    </div>
+
+
+                    <div>
+
+                        <b id="animeCount">
+                            —
+                        </b>
+
+                        <span>
+                            أنمي
                         </span>
 
                     </div>
@@ -211,22 +283,12 @@
                     </div>
 
 
-                    <div>
-
-                        <b id="lastUpdate">
-                            —
-                        </b>
-
-                        <span>
-                            آخر تحديث
-                        </span>
-
-                    </div>
-
                 </div>
 
             </div>
 
+
+            <!-- HERO ART -->
 
             <div
                 class="hero-art"
@@ -237,13 +299,17 @@
 
                 <div class="hero-badge">
 
-                    NOVA
+                    IRAQ
 
                     <br>
 
                     <strong>
-                        PREMIERE
+                        EMPIRE
                     </strong>
+
+                    <small>
+                        CINEMA
+                    </small>
 
                 </div>
 
@@ -252,7 +318,104 @@
         </section>
 
 
-        <!-- POPULAR -->
+        <!-- =====================================
+             QUICK CATEGORIES
+        ====================================== -->
+
+        <section
+            class="quick-types"
+            aria-label="أنواع المحتوى"
+        >
+
+            <a
+                class="type-card type-movie"
+                href="#movies"
+            >
+
+                <span class="type-icon">
+                    🎬
+                </span>
+
+                <span>
+
+                    <small>
+                        IRAQ EMPIRE
+                    </small>
+
+                    <strong>
+                        الأفلام
+                    </strong>
+
+                </span>
+
+                <b>
+                    ←
+                </b>
+
+            </a>
+
+
+            <a
+                class="type-card type-series"
+                href="#series"
+            >
+
+                <span class="type-icon">
+                    📺
+                </span>
+
+                <span>
+
+                    <small>
+                        IRAQ EMPIRE
+                    </small>
+
+                    <strong>
+                        المسلسلات
+                    </strong>
+
+                </span>
+
+                <b>
+                    ←
+                </b>
+
+            </a>
+
+
+            <a
+                class="type-card type-anime"
+                href="#anime"
+            >
+
+                <span class="type-icon">
+                    ✦
+                </span>
+
+                <span>
+
+                    <small>
+                        IRAQ EMPIRE
+                    </small>
+
+                    <strong>
+                        الأنمي
+                    </strong>
+
+                </span>
+
+                <b>
+                    ←
+                </b>
+
+            </a>
+
+        </section>
+
+
+        <!-- =====================================
+             POPULAR
+        ====================================== -->
 
         <section
             class="section"
@@ -270,6 +433,10 @@
                     <h2>
                         الأكثر شعبية
                     </h2>
+
+                    <p class="section-description">
+                        المحتوى الأكثر مشاهدة وتفاعلاً في المكتبة.
+                    </p>
 
                 </div>
 
@@ -296,11 +463,14 @@
         </section>
 
 
-        <!-- MOVIES -->
+        <!-- =====================================
+             MOVIES
+        ====================================== -->
 
         <section
             class="section dark-section"
             id="movies"
+            data-content-type="movie"
         >
 
             <div class="section-head">
@@ -308,23 +478,27 @@
                 <div>
 
                     <span class="kicker">
-                        IRAQ EMPIRE LIBRARY
+                        IRAQ EMPIRE MOVIES
                     </span>
 
                     <h2>
                         مكتبة الأفلام
                     </h2>
 
+                    <p class="section-description">
+                        أحدث الأفلام والأعمال السينمائية المتوفرة.
+                    </p>
+
                 </div>
 
 
                 <div class="sort-wrap">
 
-                    <label for="sortSelect">
+                    <label for="movieSortSelect">
                         ترتيب
                     </label>
 
-                    <select id="sortSelect">
+                    <select id="movieSortSelect">
 
                         <option value="popular">
                             الأكثر شعبية
@@ -345,14 +519,17 @@
             </div>
 
 
+            <!-- تصنيفات الأفلام -->
+
             <div
                 class="filters"
-                id="filters"
+                id="movieFilters"
             >
 
                 <button
                     class="filter active"
                     data-category="all"
+                    type="button"
                 >
                     الكل
                 </button>
@@ -360,6 +537,7 @@
                 <button
                     class="filter"
                     data-category="أكشن"
+                    type="button"
                 >
                     أكشن
                 </button>
@@ -367,6 +545,7 @@
                 <button
                     class="filter"
                     data-category="دراما"
+                    type="button"
                 >
                     دراما
                 </button>
@@ -374,6 +553,7 @@
                 <button
                     class="filter"
                     data-category="رعب"
+                    type="button"
                 >
                     رعب
                 </button>
@@ -381,6 +561,7 @@
                 <button
                     class="filter"
                     data-category="كوميديا"
+                    type="button"
                 >
                     كوميديا
                 </button>
@@ -388,6 +569,7 @@
                 <button
                     class="filter"
                     data-category="خيال"
+                    type="button"
                 >
                     خيال
                 </button>
@@ -395,6 +577,7 @@
                 <button
                     class="filter"
                     data-category="خيال علمي"
+                    type="button"
                 >
                     خيال علمي
                 </button>
@@ -402,6 +585,7 @@
                 <button
                     class="filter"
                     data-category="إثارة"
+                    type="button"
                 >
                     إثارة
                 </button>
@@ -412,6 +596,7 @@
             <div
                 class="movie-grid"
                 id="movieGrid"
+                data-type="movie"
             ></div>
 
 
@@ -439,6 +624,7 @@
             <button
                 class="load-more"
                 id="loadMore"
+                type="button"
             >
                 عرض المزيد
             </button>
@@ -446,7 +632,213 @@
         </section>
 
 
-        <!-- CATEGORIES -->
+        <!-- =====================================
+             SERIES
+        ====================================== -->
+
+        <section
+            class="section series-section"
+            id="series"
+            data-content-type="series"
+        >
+
+            <div class="section-head">
+
+                <div>
+
+                    <span class="kicker">
+                        IRAQ EMPIRE SERIES
+                    </span>
+
+                    <h2>
+                        مكتبة المسلسلات
+                    </h2>
+
+                    <p class="section-description">
+                        مسلسلات مختارة من مصادر البيانات المتاحة.
+                    </p>
+
+                </div>
+
+
+                <a
+                    href="#series"
+                    class="text-link"
+                    data-refresh-type="series"
+                >
+                    عرض الكل ←
+                </a>
+
+            </div>
+
+
+            <div
+                class="content-tabs"
+                id="seriesFilters"
+            >
+
+                <button
+                    class="content-tab active"
+                    data-series-filter="all"
+                    type="button"
+                >
+                    الكل
+                </button>
+
+                <button
+                    class="content-tab"
+                    data-series-filter="popular"
+                    type="button"
+                >
+                    الأكثر شعبية
+                </button>
+
+                <button
+                    class="content-tab"
+                    data-series-filter="rating"
+                    type="button"
+                >
+                    الأعلى تقييماً
+                </button>
+
+            </div>
+
+
+            <div
+                class="movie-grid"
+                id="seriesGrid"
+                data-type="series"
+            ></div>
+
+
+            <div
+                class="empty"
+                id="seriesEmptyState"
+                hidden
+            >
+
+                <div>
+                    ◈
+                </div>
+
+                <h3>
+                    لا توجد مسلسلات حالياً
+                </h3>
+
+                <p>
+                    سيتم عرض المسلسلات تلقائياً عند توفرها من المصدر.
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================
+             ANIME
+        ====================================== -->
+
+        <section
+            class="section dark-section anime-section"
+            id="anime"
+            data-content-type="anime"
+        >
+
+            <div class="section-head">
+
+                <div>
+
+                    <span class="kicker">
+                        IRAQ EMPIRE ANIME
+                    </span>
+
+                    <h2>
+                        عالم الأنمي
+                    </h2>
+
+                    <p class="section-description">
+                        أعمال الأنمي المحدثة تلقائياً من مصادر البيانات.
+                    </p>
+
+                </div>
+
+
+                <a
+                    href="#anime"
+                    class="text-link"
+                    data-refresh-type="anime"
+                >
+                    عرض الكل ←
+                </a>
+
+            </div>
+
+
+            <div
+                class="content-tabs"
+                id="animeFilters"
+            >
+
+                <button
+                    class="content-tab active"
+                    data-anime-filter="all"
+                    type="button"
+                >
+                    الكل
+                </button>
+
+                <button
+                    class="content-tab"
+                    data-anime-filter="airing"
+                    type="button"
+                >
+                    يعرض الآن
+                </button>
+
+                <button
+                    class="content-tab"
+                    data-anime-filter="rating"
+                    type="button"
+                >
+                    الأعلى تقييماً
+                </button>
+
+            </div>
+
+
+            <div
+                class="movie-grid"
+                id="animeGrid"
+                data-type="anime"
+            ></div>
+
+
+            <div
+                class="empty"
+                id="animeEmptyState"
+                hidden
+            >
+
+                <div>
+                    ✦
+                </div>
+
+                <h3>
+                    لا يوجد أنمي حالياً
+                </h3>
+
+                <p>
+                    سيتم تحديث مكتبة الأنمي تلقائياً.
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================
+             CATEGORIES
+        ====================================== -->
 
         <section
             class="section categories-section"
@@ -465,6 +857,10 @@
                         اختر مزاجك
                     </h2>
 
+                    <p class="section-description">
+                        اختر نوع المحتوى الذي تريد استكشافه.
+                    </p>
+
                 </div>
 
             </div>
@@ -472,9 +868,11 @@
 
             <div class="category-grid">
 
+
                 <button
                     class="category-card c1"
                     data-category="أكشن"
+                    type="button"
                 >
 
                     <b>
@@ -495,6 +893,7 @@
                 <button
                     class="category-card c2"
                     data-category="دراما"
+                    type="button"
                 >
 
                     <b>
@@ -515,6 +914,7 @@
                 <button
                     class="category-card c3"
                     data-category="رعب"
+                    type="button"
                 >
 
                     <b>
@@ -535,6 +935,7 @@
                 <button
                     class="category-card c4"
                     data-category="كوميديا"
+                    type="button"
                 >
 
                     <b>
@@ -555,6 +956,7 @@
                 <button
                     class="category-card c5"
                     data-category="خيال علمي"
+                    type="button"
                 >
 
                     <b>
@@ -571,16 +973,72 @@
 
                 </button>
 
+
+                <button
+                    class="category-card c6"
+                    data-category="إثارة"
+                    type="button"
+                >
+
+                    <b>
+                        06
+                    </b>
+
+                    <strong>
+                        إثارة
+                    </strong>
+
+                    <span>
+                        THRILLER
+                    </span>
+
+                </button>
+
+
             </div>
+
+        </section>
+
+
+        <!-- =====================================
+             LIBRARY STATUS
+        ====================================== -->
+
+        <section
+            class="library-status"
+            id="libraryStatus"
+        >
+
+            <div>
+
+                <span class="status-dot"></span>
+
+                <span>
+                    IRAQ EMPIRE CINEMA
+                </span>
+
+            </div>
+
+            <p id="statusText">
+                جاري الاتصال بمكتبة المحتوى...
+            </p>
+
+            <small id="lastUpdate">
+                —
+            </small>
 
         </section>
 
     </main>
 
 
+    <!-- =========================================
+         FOOTER
+    ========================================== -->
+
     <footer class="footer">
 
-        <div>
+        <div class="footer-brand">
 
             <b>
                 IRAQ EMPIRE
@@ -590,21 +1048,36 @@
                 CINEMA
             </span>
 
+            <small>
+                عراق إمباير سينما
+            </small>
+
         </div>
 
+
         <p>
-            مكتبة سينمائية تتحدث تلقائياً.
+            مكتبة سينمائية تجمع الأفلام والمسلسلات والأنمي
+            وتُحدّث تلقائياً.
         </p>
 
+
         <small>
-            بيانات الأفلام والصور مقدمة عبر مصادر بيانات مرخصة.
+
+            بيانات الأفلام والمسلسلات والأنمي والصور
+            مقدمة عبر مصادر بيانات خارجية.
+
+            <br>
+
             IRAQ EMPIRE CINEMA غير تابع لـ TMDB.
+
         </small>
 
     </footer>
 
 
-    <!-- SEARCH -->
+    <!-- =========================================
+         SEARCH OVERLAY
+    ========================================== -->
 
     <div
         class="search-overlay"
@@ -617,24 +1090,75 @@
             <button
                 class="close-btn"
                 id="closeSearch"
+                type="button"
+                aria-label="إغلاق البحث"
             >
                 ×
             </button>
+
 
             <span class="kicker">
                 IRAQ EMPIRE SEARCH
             </span>
 
+
             <h2>
-                ابحث عن فيلم
+                ابحث في المكتبة
             </h2>
+
+
+            <p class="search-description">
+                ابحث عن فيلم أو مسلسل أو أنمي.
+            </p>
+
 
             <input
                 id="searchInput"
                 type="search"
-                placeholder="اكتب اسم الفيلم..."
+                placeholder="اكتب اسم الفيلم أو المسلسل أو الأنمي..."
                 autocomplete="off"
             >
+
+
+            <div
+                class="search-types"
+                id="searchTypes"
+            >
+
+                <button
+                    class="search-type active"
+                    data-search-type="all"
+                    type="button"
+                >
+                    الكل
+                </button>
+
+                <button
+                    class="search-type"
+                    data-search-type="movie"
+                    type="button"
+                >
+                    أفلام
+                </button>
+
+                <button
+                    class="search-type"
+                    data-search-type="series"
+                    type="button"
+                >
+                    مسلسلات
+                </button>
+
+                <button
+                    class="search-type"
+                    data-search-type="anime"
+                    type="button"
+                >
+                    أنمي
+                </button>
+
+            </div>
+
 
             <div
                 id="searchResults"
@@ -646,7 +1170,9 @@
     </div>
 
 
-    <!-- MOVIE MODAL -->
+    <!-- =========================================
+         CONTENT MODAL
+    ========================================== -->
 
     <div
         class="movie-modal"
@@ -656,9 +1182,12 @@
 
         <div class="modal-card">
 
+
             <button
                 class="close-btn"
                 id="closeModal"
+                type="button"
+                aria-label="إغلاق"
             >
                 ×
             </button>
@@ -672,6 +1201,7 @@
 
             <div class="modal-body">
 
+
                 <div
                     class="modal-poster"
                     id="modalPoster"
@@ -680,13 +1210,22 @@
 
                 <div class="modal-details">
 
+
+                    <span
+                        class="kicker"
+                        id="modalType"
+                    ></span>
+
+
                     <span
                         class="kicker"
                         id="modalGenres"
                     ></span>
 
 
-                    <h2 id="modalTitle"></h2>
+                    <h2
+                        id="modalTitle"
+                    ></h2>
 
 
                     <div
@@ -695,24 +1234,37 @@
                     ></div>
 
 
-                    <p id="modalOverview"></p>
+                    <p
+                        id="modalOverview"
+                    ></p>
+
+
+                    <div
+                        class="modal-extra"
+                        id="modalExtra"
+                    ></div>
 
 
                     <div class="modal-actions">
 
+
                         <button
                             class="btn btn-primary"
                             id="modalWatch"
+                            type="button"
                         >
                             المشاهدة
                         </button>
 
+
                         <button
                             class="btn btn-ghost"
                             id="modalCloseAlt"
+                            type="button"
                         >
                             إغلاق
                         </button>
+
 
                     </div>
 
@@ -725,11 +1277,21 @@
     </div>
 
 
+    <!-- =========================================
+         TOAST
+    ========================================== -->
+
     <div
         class="toast"
         id="toast"
+        role="status"
+        aria-live="polite"
     ></div>
 
+
+    <!-- =========================================
+         APP SCRIPT
+    ========================================== -->
 
     <script src="index.js"></script>
 
