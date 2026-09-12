@@ -8,7 +8,7 @@ const path = require("node:path");
 const source = fs.readFileSync(path.join(__dirname, "..", "lib", "tmdb-providers.js"), "utf8");
 
 test("TMDB provider mapping preserves the official TMDB watch link", () => {
-    assert.match(source, /link:\s*provider\.link\s*\|\|\s*""/);
+    assert.match(source, /link:\s*String\(provider\.link\s*\|\|\s*""\)\.trim\(\)/);
 });
 
 test("TMDB provider mapping keeps provider type and logo metadata", () => {
