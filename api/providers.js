@@ -2,6 +2,7 @@
 
 const { getCatalog } = require("../lib/catalog");
 const { getWatchProviders } = require("../lib/tmdb-providers");
+const { enrichProviders } = require("../lib/provider-enrichment");
 const { getOfficialProviders } = require("../lib/official-providers");
 
 function findItem(catalog, id) {
@@ -34,11 +35,11 @@ module.exports = async function handler(req, res) {
             return res.status(404).json({ success: false, error: "المحتوى غير موجود أو لا يملك TMDB ID." });
         }
 
-        const providers = await getWatchProviders(
+        const providers = enrichProviders(await getWatchProviders(
             item.tmdbId,
             item.type,
             region
-        );
+        ));
 
         return res.status(200).json({
             success: true,
@@ -50,6 +51,7 @@ module.exports = async function handler(req, res) {
                 type: item.type
             },
             providers,
+            providerCount: providers.length,
             officialDirectory: getOfficialProviders(),
             attribution: "بيانات مزوّدي المشاهدة من TMDB/JustWatch. توفر الخدمات يختلف حسب البلد والعمل."
         });
