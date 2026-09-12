@@ -8,8 +8,8 @@ module.exports = async (req, res) => {
     const publishableKey = String(process.env.SUPABASE_PUBLISHABLE_KEY || "").trim();
 
     if (!url || !publishableKey) {
-        return res.status(503).json({
-            success: false,
+        return res.status(200).json({
+            success: true,
             configured: false,
             discord: false,
             message: "إعدادات Supabase غير موجودة في Vercel."
@@ -26,7 +26,7 @@ module.exports = async (req, res) => {
         });
 
         if (!response.ok) {
-            return res.status(502).json({
+            return res.status(200).json({
                 success: false,
                 configured: true,
                 discord: false,
@@ -48,7 +48,7 @@ module.exports = async (req, res) => {
                 : "Discord OAuth غير مفعّل في Supabase."
         });
     } catch (error) {
-        return res.status(502).json({
+        return res.status(200).json({
             success: false,
             configured: true,
             discord: false,
