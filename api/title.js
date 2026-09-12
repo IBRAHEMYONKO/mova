@@ -21,7 +21,7 @@ function findItem(catalog, id) {
 
 function parseAniListId(id) {
     const value = String(id || "").trim();
-    const typed = value.match(/^anilist-(anime|manga)-(\d+)$/i);
+    const typed = value.match(/^anilist-(anime|manga|manhwa|novel)-(\d+)$/i);
     if (typed) return { id: Number(typed[2]), type: typed[1].toLowerCase() };
     const legacy = value.match(/^anilist-(\d+)$/i);
     if (legacy) return { id: Number(legacy[1]), type: "anime" };
@@ -63,7 +63,7 @@ function getProviderEpisodeLinks(seasons) {
 
 module.exports = async function handler(req, res) {
     try {
-        res.setHeader("Cache-Control", "s-maxage=120, stale-while-revalidate=300");
+        res.setHeader("Cache-Control", "s-maxage=300, stale-while-revalidate=900");
         res.setHeader("Content-Type", "application/json; charset=utf-8");
 
         const url = new URL(req.url, `https://${req.headers.host || "localhost"}`);
@@ -71,12 +71,16 @@ module.exports = async function handler(req, res) {
         const region = (url.searchParams.get("region") || "IQ").toUpperCase();
         if (!id) return res.status(400).json({ success: false, error: "معرّف المحتوى مطلوب." });
 
-        const catalog = await getCatalog(false);
-        let item = findItem(catalog, id);
+        // AniList IDs are self-contained. Resolve them directly instead of
+        // waiting for the large mixed catalog and its external providers.
+        const parsed = parseAniListId(id);
+        let item = parsed ? await getAniListMediaById(parsed.id, parsed.type) : null;
+
         if (!item) {
-            const parsed = parseAniListId(id);
-            if (parsed) item = await getAniListMediaById(parsed.id, parsed.type);
+            const catalog = await getCatalog(false);
+            item = findItem(catalog, id);
         }
+
         if (!item) return res.status(404).json({ success: false, error: "المحتوى غير موجود." });
 
         const stored = loadStoredWatchItem(item.id) || {};
@@ -134,6 +138,6 @@ module.exports = async function handler(req, res) {
         });
     } catch (error) {
         console.error("[TITLE API]", error.message);
-        return res.status(500).json({ success: false, error: "تعذر تجهيز صفحة المحتوى حاليًا." });
+        return res.status(502).json({ success: false, error: error.message || "تعذر تجهيز صفحة المحتوى حاليًا." });
     }
 };
