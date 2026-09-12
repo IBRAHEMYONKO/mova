@@ -5,7 +5,7 @@
 
     "tmdbApiKey": "",
 
-    "omdbApiKey": "",
+    "omdbApiKey": "http://www.omdbapi.com/?i=tt3896198&apikey=f15f4a98",
 
     "omdbSeedTitles": [],
 
